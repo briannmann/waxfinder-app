@@ -44,9 +44,16 @@ jobs:
             Start-Sleep 1
             try { $r = Invoke-WebRequest http://127.0.0.1:8765/discover/status -UseBasicParsing -TimeoutSec 3; $ok = ($r.StatusCode -eq 200) } catch {}
           }
-          $log = Join-Path $env:LOCALAPPDATA "Programs\Waxfinder\server.log"
-          if (Test-Path $log) { Write-Host "---- server.log ----"; Get-Content $log -Tail 60 }
+          Start-Sleep 20   # let the background start-up threads run
+          $dir = Join-Path $env:LOCALAPPDATA "Programs\Waxfinder\_internal"
+          $bad = $false
+          foreach ($n in "server.log", "swallowed.log") {
+            $f = Join-Path $dir $n
+            if (Test-Path $f) { Write-Host "---- $n ----"; Get-Content $f -Tail 80; if ((Get-Content $f -Raw) -match "Traceback") { $bad = $true } } else { Write-Host "(no $n)" }
+          }
+          Write-Host "---- data files written ----"; Get-ChildItem $dir -Filter *.json | Select-Object -ExpandProperty Name
           if (-not $ok) { throw "Waxfinder did not answer on :8765 within 90 s" }
+          if ($bad) { throw "Traceback found in the logs" }
           $page = Invoke-WebRequest http://127.0.0.1:8765/ -UseBasicParsing
           if ($page.StatusCode -ne 200) { throw "home page failed" }
           Write-Host "Smoke test passed"
