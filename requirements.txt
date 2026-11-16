@@ -1,0 +1,10 @@
+numpy
+yt-dlp
+imageio-ffmpeg
+# optional: reads your local Rekordbox library (otherwise upload a Rekordbox XML in the app)
+pyrekordbox
+mutagen
+# analysis (BPM, key, energy, mix points): without these three the app still runs, with tempo only
+librosa
+scipy
+scikit-learn

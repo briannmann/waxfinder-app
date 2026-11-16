@@ -1,0 +1,95 @@
+/* Shared across every page (linked after each page's own styles). */
+
+/* ---- scrollbars: thin, rounded, no arrow buttons, no track, so they sit inside the glass tables instead of looking
+   bolted on. Chrome only uses ::-webkit-scrollbar while scrollbar-width/colour are auto, and several panels set those
+   (which drew Windows' native bar with arrows), so they're reset here wherever ::-webkit-scrollbar works. */
+@supports selector(::-webkit-scrollbar) {
+  *, *::before, *::after { scrollbar-width: auto !important; scrollbar-color: auto !important; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-track-piece, ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .24); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; min-height: 40px; }
+  ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, .45); }
+  ::-webkit-scrollbar-thumb:active { background-color: rgba(255, 255, 255, .6); }
+  /* the Library table: the bar starts under the sticky header row and stops short of the rounded corner */
+  .lib .lwrap::-webkit-scrollbar-track { margin: 44px 0 10px; }
+  .lib .lrail::-webkit-scrollbar-track { margin: 10px 0; }
+}
+
+/* ---- top nav: the current page is green; a white capsule follows the pointer along the links and fades when you leave
+   (static/nav.js adds it) */
+.nav .pill.has-ind { position: relative; gap: 2px; padding: 4px; }
+.nav .pill.has-ind:hover { background: transparent; color: #fff; }   /* Home's old hover filled the whole pill white */
+.nav .pill.has-ind a { position: relative; z-index: 1; padding: 8px 16px; border-radius: 999px; color: #fff; opacity: 1; transition: color .12s; white-space: nowrap; }
+.nav .pill.has-ind a:hover { opacity: 1; }
+.nav .pill.has-ind a.on { color: var(--lime, #c6ff3d); }
+.nav .pill.has-ind a.hot { color: var(--ink, #14062e); }
+.nav .pill.has-ind a:focus-visible { outline: 2px solid var(--lime, #c6ff3d); outline-offset: 2px; }
+.nav .pill-ind { position: absolute; left: 0; top: 4px; bottom: 4px; width: 0; border-radius: 999px; background: #fff; opacity: 0; pointer-events: none; z-index: 0;
+  transition: transform .2s cubic-bezier(.2, .8, .2, 1), width .2s cubic-bezier(.2, .8, .2, 1), opacity .15s ease; }
+/* phones: keep the nav (it used to vanish on Home and Crates) as a compact strip that scrolls sideways */
+@media (max-width: 44rem) {
+  .nav .pill.has-ind { display: inline-flex !important; max-width: calc(100vw - 150px); overflow-x: auto; font-size: 10px; letter-spacing: .03em; scrollbar-width: none !important; }
+  .nav .pill.has-ind::-webkit-scrollbar { display: none; }
+  .nav .pill.has-ind.more-r { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent); }
+  .nav .pill.has-ind.more-l.more-r { -webkit-mask-image: linear-gradient(to right, transparent, #000 26px, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to right, transparent, #000 26px, #000 calc(100% - 26px), transparent); }
+  .nav .pill.has-ind.more-l:not(.more-r) { -webkit-mask-image: linear-gradient(to right, transparent, #000 26px); mask-image: linear-gradient(to right, transparent, #000 26px); }
+  .nav .pill.has-ind a { padding: 12px 11px; }   /* a thumb-sized row */
+  .nav .logo { white-space: nowrap; flex: none; }
+  /* logo, then the strip takes whatever room is left, then the + button: nothing touches or runs off the edge */
+  .nav { gap: 10px; }
+  .nav .navR { flex: 1 1 0; min-width: 0; justify-content: flex-end; }
+  .nav .navR .pill.has-ind { max-width: none; min-width: 0; flex: 0 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) { .nav .pill-ind { transition: opacity .2s; } }
+
+/* ---- number boxes (BPM etc.): no browser spin arrows; type the number, or Up/Down to step it */
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ---- dropdowns (every <select>): the open list is the site's own popup, not Windows' white box. Rounded ink-glass
+   panel like the crate picker, pill rows, lime tick on the chosen one, thin seamless scrollbar, short fade in.
+   Chrome's customisable select (appearance: base-select); other browsers keep the styled closed pill + native list. */
+@supports (appearance: base-select) {
+  select, ::picker(select) { appearance: base-select !important; }
+  select { background-color: transparent; display: inline-flex; align-items: center; }   /* base-select pins the label to the top of a fixed-height pill; centre it */
+  select::picker-icon { display: none; }   /* the pages draw their own chevron */
+  ::picker(select) {
+    margin-block: 6px; padding: 6px; min-width: anchor-size(width); max-height: min(440px, 70dvh); scrollbar-width: none !important;
+    border: 1px solid rgba(255, 255, 255, .18); border-radius: 18px; background: rgba(20, 6, 46, .94); color: #fff;
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+    overflow-y: auto; overscroll-behavior: contain;
+    opacity: 0; translate: 0 -4px;
+    transition: opacity .16s ease-out, translate .16s ease-out, display .16s allow-discrete, overlay .16s allow-discrete;
+  }
+  select:open::picker(select) { opacity: 1; translate: 0 0; }
+  @starting-style { select:open::picker(select) { opacity: 0; translate: 0 -4px; } }
+  select option { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; color: #fff !important;
+    background: transparent; font-weight: 600; white-space: nowrap; cursor: pointer; }
+  select option:hover, select option:focus-visible { background: rgba(255, 255, 255, .13); outline: 0; }
+  select option:checked { font-weight: 800; }
+  select option:disabled { color: rgba(255, 255, 255, .4) !important; cursor: default; }
+  select option::checkmark { order: 1; margin-left: auto; color: var(--lime, #c6ff3d); }
+}
+@media (prefers-reduced-motion: reduce) { ::picker(select) { transition: none; } }
+
+/* the clear (x) in every search box: pink and big enough to see */
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-left:8px;cursor:pointer;opacity:1;
+  background:no-repeat center/16px 16px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9' stroke='%23ff2e88' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E")}
+
+/* ---- music folder not connected (static/drivebar.js): one notice in the top bar, beside the logo */
+.nav .wf-drive { flex: 0 1 auto; min-width: 0; margin: 0 auto 0 18px; display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box;
+  height: 36px; padding: 0 16px 0 12px; border-radius: 999px; border: 1.5px solid #ffb35c; background: rgba(20, 6, 46, .92); color: #fff; font: 600 13px/1 inherit; font-family: inherit; text-align: left; cursor: pointer; }
+.wf-drive i { width: 9px; height: 9px; flex: none; border-radius: 50%; background: #ff9f2e; box-shadow: 0 0 0 3px rgba(255, 159, 46, .25); }
+.wf-drive b { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-drive span { opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wf-drive:hover { border-color: #fff; }
+.wf-drive:focus-visible { outline: 3px solid var(--lime, #c6ff3d); outline-offset: 3px; }
+@media (max-width: 1280px) { .wf-drive span { display: none; } }
+@media (max-width: 1000px) { .nav .wf-drive { width: 36px; padding: 0; justify-content: center; margin-left: 10px; flex: none; } .wf-drive b { display: none; } }   /* small screens: just the amber dot (tap it for Files) */
+
+/* ---- footer: the tools that are not in the top nav */
+.wf-foot { position: relative; z-index: 2; display: flex; justify-content: center; gap: 28px; padding: 36px 16px 92px; }
+.wf-foot a { color: #fff; opacity: .7; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; padding: 12px 4px; }
+.wf-foot a:hover, .wf-foot a[aria-current] { opacity: 1; }
+.wf-foot a:focus-visible { outline: 2px solid var(--lime, #c6ff3d); outline-offset: 2px; }

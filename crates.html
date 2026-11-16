@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waxfinder Crates</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23ff4d2e'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23c6ff3d'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"/static/vendor/three/three.module.js","three/addons/":"/static/vendor/three/addons/"}}</script>
+<link rel="modulepreload" href="/static/vendor/three/three.module.js"><link rel="modulepreload" href="/static/crates3d.js">
+<script>/* start the 3D module (and the crate data) while the page is still parsing, so the boxes appear in one step */
+window.wfLoad3d=n=>import('/static/crates3d.js'+(n?'?r='+n:'')).catch(e=>n<3?new Promise(r=>setTimeout(r,200*(n+1))).then(()=>wfLoad3d(n+1)):e);window.wfScene3d=wfLoad3d(0);window.wfData0=fetch('/crates/data').then(r=>r.json()).catch(()=>null)</script>
+<style>
+:root{
+  --lime:#c6ff3d; --ember:#ff4d2e; --magenta:#ff2e88; --amber:#ffb23d; --ink:#14062e;
+  --bg-a:rgb(52,112,196); --bg-b:rgb(178,170,232); --glow-a:rgba(255,255,255,.32); --glow-b:rgba(255,170,212,.75);   /* Crates = baby blue with a baby pink hue (green, charcoal, cobalt rejected) */
+  --glass:rgba(30,46,128,.34); --glass-line:rgba(255,255,255,.34);   /* tinted so white text reads on the light page */
+  --font:"Archivo",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --pad:clamp(16px,3vw,40px);
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{overflow-x:clip}
+body{margin:0;background:#3a74c4;color:#fff;font:400 16px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--lime);outline-offset:3px;border-radius:12px}
+.bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(60% 55% at 86% 8%,var(--glow-a),transparent 72%),radial-gradient(55% 50% at 6% 94%,var(--glow-b),transparent 72%),linear-gradient(160deg,var(--bg-a),var(--bg-b))}
+.bg::after{content:"";position:absolute;inset:0;opacity:.08;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* nav (same as the main page) */
+.nav{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:20px var(--pad);pointer-events:none;transition:padding .3s}
+.nav>*{pointer-events:auto}
+.nav::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(40,90,170,.74);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);opacity:0;transition:opacity .3s}
+.nav.stuck::before{opacity:1}
+.nav.stuck{padding-top:14px;padding-bottom:14px}
+.logo{font-weight:900;font-stretch:125%;font-size:22px;letter-spacing:-.03em;text-decoration:none}
+.wdot{display:inline-block;width:.3em;height:.3em;margin:0 .05em;border-radius:53% 47% 46% 54%/48% 54% 46% 52%;background:radial-gradient(circle at 34% 30%,#f4ffd0,var(--lime) 46%,#8fd400);animation:morph 23.7s cubic-bezier(.45,0,.55,1) infinite}
+.pill{display:inline-flex;gap:28px;align-items:center;border:2px solid #fff;border-radius:999px;padding:10px 22px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px}
+.pill a{text-decoration:none}.pill a:hover{opacity:.7}
+.pill a.on{color:var(--lime)}
+a.solo{text-decoration:none}a.solo:hover{background:#fff;color:var(--ember)}
+
+main{padding:128px var(--pad) clamp(56px,9vh,120px)}   /* full width like the main page; top clears the fixed nav */
+h1{margin:0;font-weight:900;font-stretch:125%;font-size:clamp(38px,8.2vw,140px);line-height:.9;letter-spacing:-.035em;text-transform:uppercase;white-space:nowrap}   /* = main page .bigh */
+h1 span{display:block}
+.hero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:clamp(24px,4vw,48px)}   /* = main page .sh */
+
+/* table view crate rows: stats chips + energy spread (built in crates3d.js) */
+.cstats{grid-column:1;display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.cst-n{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;opacity:.85;margin-right:2px}
+.cst{flex:none;font-size:12px;font-weight:700;line-height:1;padding:5px 10px;border-radius:999px;background:rgba(10,20,70,.32);font-variant-numeric:tabular-nums}
+.cst-g{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6)}
+.cspread{grid-column:2;grid-row:1/3;align-self:center;display:flex;align-items:center;gap:8px;padding:7px 12px 6px;border-radius:14px;background:var(--glass);box-shadow:inset 0 0 0 1px var(--glass-line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.cspread>b{align-self:center;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.8;margin-right:4px}
+.csp-c{display:grid;justify-items:center;gap:4px;width:58px}
+.csp-c em{font-style:normal;font-weight:800;opacity:1;margin-left:3px;font-variant-numeric:tabular-nums}
+.csp-w{display:flex;width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.12)}
+.csp-w i{display:block;height:100%;border-radius:999px}
+.csp-0 i{background:linear-gradient(90deg,#cfe0ff,#fff)}.csp-1 i{background:linear-gradient(90deg,#ffd27a,var(--amber))}.csp-2 i{background:linear-gradient(90deg,#ff6fae,var(--magenta))}
+.csp-c small{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75;line-height:1}
+@media (max-width:600px){.cstats{flex-wrap:wrap;row-gap:4px;max-height:40px;-webkit-mask-image:none;mask-image:none}.cst{font-size:11px;padding:3px 7px}.cst-n{font-size:11px}}
+/* lava blob label */
+.blob{position:relative;display:inline-flex;align-items:center;padding:28px 52px;font-weight:800;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);white-space:nowrap;isolation:isolate}
+.blob{filter:drop-shadow(0 12px 22px rgba(0,0,0,.35))}
+.blob>svg,.go.blobby>svg{position:absolute;left:-12px;top:-14px;width:calc(100% + 24px);height:calc(100% + 28px);overflow:visible;z-index:-1;pointer-events:none}
+.blob.ember{color:#fff}
+@keyframes morph{0%,100%{border-radius:58% 42% 47% 53%/52% 46% 54% 48%}25%{border-radius:46% 54% 57% 43%/45% 55% 45% 55%}50%{border-radius:53% 47% 42% 58%/57% 43% 52% 48%}75%{border-radius:43% 57% 52% 48%/49% 53% 47% 51%}}
+
+.glass{background:var(--glass);border:1px solid var(--glass-line);border-radius:28px;-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);box-shadow:0 24px 60px rgba(0,0,0,.28)}
+
+
+/* crates */
+.stage{position:relative;min-height:clamp(340px,58vh,620px);margin:0 calc(-1 * var(--pad))}
+.stage.flat{min-height:0;margin:0;display:flex;flex-wrap:wrap;gap:12px}
+.flat .crate-b{border:2px solid #fff;background:transparent;border-radius:22px;padding:22px 26px;font-weight:800;font-size:18px;text-align:left;display:grid;gap:4px;min-width:200px}
+.flat .crate-b small{font-weight:600;font-size:13px;opacity:.7}
+.flat .crate-b:hover{background:#fff;color:var(--ink)}
+.foot{display:flex;justify-content:center;margin-top:clamp(40px,7vh,90px)}
+.empty{font-size:15px;color:rgba(255,255,255,.75)}
+.open{position:fixed;z-index:30;top:84px;left:0;right:0;margin:0 auto;width:min(1280px,calc(100vw - 32px));max-height:calc(100vh - 108px);display:flex;flex-direction:column;overflow:hidden;
+  padding:clamp(18px,2.4vw,30px);border-radius:32px;background:rgba(22,42,118,.86);border:1px solid var(--glass-line);-webkit-backdrop-filter:blur(26px) saturate(1.2);backdrop-filter:blur(26px) saturate(1.2);box-shadow:0 40px 100px rgba(8,14,60,.55)}
+.open[hidden]{display:none}
+.obody{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 calc(-1 * clamp(18px,2.4vw,30px));padding:0 clamp(18px,2.4vw,30px) 4px}
+.scrim{position:fixed;inset:0;z-index:25;background:rgba(10,20,70,.5);touch-action:none}
+.scrim[hidden]{display:none}
+.open .rhead{margin-bottom:clamp(12px,1.6vw,18px);gap:18px;align-items:center;justify-content:space-between}
+.crate-heading{display:flex;align-items:center;gap:14px;flex:1 1 260px;min-width:0}
+.crate-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.open .rhead .ghost{height:40px;display:inline-flex;align-items:center;justify-content:center;flex:none;margin:0;padding:0 14px;line-height:1}
+.open .rhead .go,.open .rhead .viewtog{margin:0}
+.open .rhead .viewtog{height:40px;flex:none;padding:2px;gap:2px;align-items:center}
+.open .rhead .viewtog button{width:32px;height:32px}
+.open .rhead .blob{flex:none;height:40px;padding:0 22px;font-size:12px}
+.open .rhead .blob>svg{left:-6px;top:-8px;width:calc(100% + 12px);height:calc(100% + 16px)}
+.open .rhead h2{font-size:clamp(24px,2.6vw,38px);line-height:1}
+.open .crhead{position:static;flex:none}
+.cpop{position:fixed;z-index:40;width:min(330px,calc(100% - 36px));padding:16px;border-radius:22px;background:rgba(14,18,60,.94);display:grid;gap:12px}
+.cpop .sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:10px}
+.cpop .sw button{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.35);padding:0;transition:transform .15s}
+.cpop .sw button:hover{transform:scale(1.15)}.cpop .sw button.on{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35)}
+.cpop label{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.cpop input[type=color]{width:46px;height:34px;border:2px solid rgba(255,255,255,.5);border-radius:10px;background:transparent;padding:2px;cursor:pointer}   /* same width as the list beside the slim scrollbar */
+.open .crhead:not([hidden])~.obody .cards.list{border-top-left-radius:0;border-top-right-radius:0;border-top:0}   /* header sits above the scroll area, so nothing slides behind its rounded corners */
+/* no square cut-offs: rows fade out at the bottom edge of the sheet, scrollbar is a slim translucent line, corners stay the sheet's own */
+.obody{scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.38) transparent;-webkit-mask-image:linear-gradient(#000 calc(100% - 34px),transparent);mask-image:linear-gradient(#000 calc(100% - 34px),transparent);padding-bottom:30px}
+.obody::-webkit-scrollbar{width:8px}.obody::-webkit-scrollbar-track{background:transparent}.obody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.38);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+/* glass sheet tinted by the crate's own colour (dark base keeps white text readable on pale crates) */
+.open{--tint:#7b3fe4;background:color-mix(in srgb,var(--tint) 50%,rgba(12,14,52,.46));border-color:color-mix(in srgb,var(--tint) 55%,rgba(255,255,255,.4));
+  -webkit-backdrop-filter:blur(30px) saturate(1.5);backdrop-filter:blur(30px) saturate(1.5);box-shadow:0 40px 100px color-mix(in srgb,var(--tint) 35%,rgba(8,14,60,.5)),inset 0 1px 0 rgba(255,255,255,.28)}
+.open .crhead{background:color-mix(in srgb,var(--tint) 38%,rgba(12,14,52,.55));border-color:color-mix(in srgb,var(--tint) 45%,rgba(255,255,255,.3))}
+.open .cards.list{background:rgba(255,255,255,.05);border-color:color-mix(in srgb,var(--tint) 45%,rgba(255,255,255,.3));-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+.open .adder{background:color-mix(in srgb,var(--tint) 22%,rgba(8,12,46,.45))}
+.scrim{background:rgba(10,20,70,.42)}
+.rhead{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:clamp(24px,4vw,48px)}
+.rhead .ghost{margin-bottom:8px}
+.rhead h2{margin:0;font-weight:900;font-stretch:125%;font-size:clamp(38px,8.2vw,140px);line-height:.9;letter-spacing:-.035em;text-transform:uppercase;overflow-wrap:anywhere}   /* main page scale; crate names may wrap */
+#oname{cursor:text;max-width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#oname:focus-visible{outline:2px solid var(--lime);outline-offset:6px;border-radius:4px}
+#oname input{width:min(360px,45vw);height:40px;max-width:100%;padding:0 8px;border-radius:8px;font:inherit;letter-spacing:inherit}
+#ocolour{flex:none;width:40px;height:40px;padding:0;margin:0;border:2px solid #fff;border-radius:50%;background:var(--tint);cursor:pointer}
+#ocolour:focus-visible{outline:2px solid var(--lime);outline-offset:4px}
+#oadd{flex:none;width:40px;height:40px;padding:0;margin:0;border:2px solid #fff;border-radius:50%;background:transparent;color:#fff;display:inline-grid;place-items:center;cursor:pointer}
+#oadd svg{width:18px;height:18px;display:block}
+#oadd:hover{background:#fff;color:var(--ink)}
+#oadd[hidden]{display:none}
+#oadd:focus-visible{outline:2px solid var(--lime);outline-offset:4px}
+.rhead .sp{flex:1}
+.rhead input{height:48px;padding:0 18px;border-radius:999px;border:1.5px solid var(--lime);background:transparent;font-weight:800;font-size:20px;min-width:0;width:min(420px,70vw)}
+.ghost{border:2px solid #fff;background:transparent;border-radius:999px;padding:10px 22px;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;transition:background-color .2s,color .2s}
+.ghost:hover{background:#fff;color:var(--ink)}
+.ghost.lime{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.vcard{position:relative;display:grid;grid-template-rows:auto 1fr auto auto;gap:12px;padding:16px;border-radius:24px;min-height:150px;transition:opacity .35s,transform .35s}
+.vcard.pending{opacity:0;transform:translateY(10px) scale(.97)}
+/* cards scrolled out of the open sheet skip style, layout and paint (a 217-track crate laid out every card on open: 150 ms) */
+.open .vcard{content-visibility:auto;contain-intrinsic-size:auto 290px auto 265px}
+.open .cards.list .vcard{contain-intrinsic-size:auto 1100px auto 50px}
+.vcard .disc{width:54px;height:54px;border-radius:50%;background:radial-gradient(circle,var(--c,#c6ff3d) 0 22%,#0c0c10 23% 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 6px 16px rgba(0,0,0,.4)}
+.vcard .who b{display:block;font-size:16px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vcard .who span{font-size:13px;color:rgba(255,255,255,.88)}
+.vcard .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(10,20,70,.32)}
+.vcard .sp{flex:1}
+.ib{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);background:transparent;display:grid;place-items:center;transition:background-color .2s,border-color .2s}
+.ib svg{width:14px;height:14px}.ib:hover{border-color:#fff;background:rgba(255,255,255,.12)}
+.ib[data-s=play]{background:var(--magenta);border-color:var(--magenta)}
+.pbar{position:relative;height:6px;background:rgba(255,255,255,.2);border-radius:999px;cursor:pointer;touch-action:none;margin-top:-2px}
+.pbar::before{content:"";position:absolute;inset:-10px 0}
+.pbar i{display:block;height:100%;width:100%;background:var(--magenta);transform-origin:left;transform:scaleX(0);border-radius:999px}
+.pbar:focus-visible{outline-offset:6px}
+.vcard .del{position:absolute;top:12px;right:12px;width:32px;height:32px;opacity:.55}
+.vcard .del:hover,.vcard .del:focus-visible{opacity:1}
+.vcard.gone{opacity:0;transform:scale(.94);pointer-events:none}
+.undo{position:fixed;left:50%;bottom:24px;z-index:35;transform:translateX(-50%);display:flex;align-items:center;gap:14px;max-width:calc(100vw - 32px);padding:8px 8px 8px 20px;border-radius:999px;
+  background:rgba(20,6,46,.92);border:1px solid rgba(255,255,255,.2);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 18px 40px rgba(0,0,0,.45);font-weight:700;font-size:14px}
+.undo span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undo button{flex:none;height:38px;padding:0 18px;border:0;border-radius:999px;background:var(--lime);color:var(--ink);font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.go{height:60px;padding:0 42px;border:0;border-radius:999px;font-weight:900;font-stretch:125%;font-size:15px;letter-spacing:.02em;text-transform:uppercase;transition:transform .2s}
+.go:hover{transform:scale(1.05)}
+.go.blobby{position:relative;isolation:isolate;background:transparent;box-shadow:none}
+.go.blobby>svg{position:absolute;left:-12px;top:-14px;width:calc(100% + 24px);height:calc(100% + 28px);overflow:visible;z-index:-1;pointer-events:none}
+.go.blobby span{position:relative;z-index:1}
+.go.pink{color:#fff;filter:drop-shadow(0 14px 26px rgba(255,46,136,.35))}
+.newform{display:flex;gap:10px;align-items:center}
+.newform input,.adhead input,.adhead select{height:46px;padding:0 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.4);background:transparent;font:inherit;font-weight:700;color:#fff;min-width:0}
+.newform input{width:min(320px,60vw)}
+.hero .crtog{margin:0 0 0 auto;height:46px;align-items:center}.hero .crtog+.csearch{margin-left:0}
+.csort{height:46px;padding:0 38px 0 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.4);background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center;font:inherit;font-weight:700;color:#fff;appearance:none;-webkit-appearance:none;cursor:pointer}
+.csort:focus{outline:0;border-color:var(--lime)}.csort option{color:#14062e}
+.csearch{height:46px;padding:0 18px;border-radius:999px;border:1.5px solid rgba(255,255,255,.4);background:transparent;font:inherit;font-weight:700;color:#fff;min-width:0;width:min(280px,60vw);margin-left:auto}
+.csearch:focus{outline:0;border-color:var(--lime)}
+.csearch::placeholder{color:rgba(255,255,255,.6)}
+/* header toolbar: search, view, sort and side-by-side in one aligned row, each with its own icon */
+.crtools{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.crtools .viewtog{margin:0;height:44px;border-width:1.5px;border-color:rgba(255,255,255,.4)}
+.crtools .viewtog button{width:36px;height:36px}
+.csearchwrap,.csortwrap{position:relative;display:inline-flex;align-items:center}
+.csearchwrap svg,.csortwrap svg{position:absolute;left:15px;width:16px;height:16px;pointer-events:none;opacity:.85}
+.crtools .csearch{height:44px;margin:0;padding-left:40px;width:min(260px,60vw)}
+.crtools .csort{height:44px;padding-left:40px}
+.crtools .cmpbtn{width:44px;height:44px;padding:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer;transition:background-color .2s,color .2s}
+.crtools .cmpbtn svg{width:18px;height:18px}
+.crtools .cmpbtn:hover,.crtools .cmpbtn[aria-expanded=true]{background:#fff;color:var(--ink)}
+@media (max-width:640px){.crtools{width:100%;justify-content:flex-start}.crtools .csearchwrap{flex:1}.crtools .csearch{width:100%}}
+.newform input:focus,.adhead input:focus,.adhead select:focus{outline:0;border-color:var(--lime)}
+.adhead select{appearance:none;-webkit-appearance:none;padding-right:38px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 16px center/12px 8px}
+.adhead select option{background:#1a0812;color:#fff}
+.adder{margin-top:28px;padding:clamp(16px,2.4vw,26px);scroll-margin-top:96px}
+.adhead{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;margin-bottom:12px}
+.adhead h3{margin:0 8px 0 0;font-weight:900;font-stretch:125%;font-size:20px;text-transform:uppercase;letter-spacing:-.01em}
+.adhead input{flex:1 1 220px}
+.adlist{list-style:none;margin:0;padding:0;max-height:min(70vh,640px);overflow-y:auto;overscroll-behavior:auto;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:var(--magenta) transparent}
+.adrow{display:grid;grid-template-columns:auto minmax(0,1.15fr) minmax(0,1fr) 262px auto;gap:10px 14px;align-items:center;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.12);border-radius:14px;transition:background-color .2s}
+.adrow:has(.ib[data-s=play]){background:rgba(255,255,255,.07)}
+.scrub{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.scrub .pbar{margin:0}
+.adrow .scell{min-width:0}.adrow .scell .wv{height:30px}
+.tm{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.75);min-width:34px}
+.tm:last-child{text-align:right}
+.adrow:last-child{border-bottom:0}
+.adrow .who{min-width:0}
+.adrow .who b,.adrow .who span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adrow .who b{font-size:15px}.adrow .who span{font-size:13px;color:rgba(255,255,255,.88)}
+.adrow .row{display:flex;gap:6px;justify-content:flex-end}
+.addbtn{width:34px;height:34px;padding:0;border-radius:50%;border:2px solid #fff;background:transparent;display:grid;place-items:center;transition:background-color .2s,border-color .2s,color .2s}
+.addbtn svg{width:14px;height:14px}
+.addbtn:hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.addbtn[aria-pressed=true]{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.adnone{padding:14px 6px;color:rgba(255,255,255,.65)}
+@media(max-width:44rem){.adrow{grid-template-columns:auto minmax(0,1fr) auto}.adrow .row{display:none}.adrow .scell{grid-column:1/-1;order:9}}
+.vcard.missing{opacity:.45}.vcard.missing.away{opacity:.8}.vcard.missing .disc{filter:grayscale(1)}
+/* view toggle (cards / list), remembered per browser */
+.rbrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.12);cursor:pointer;border-radius:14px}
+.rbrow:last-child{border-bottom:0}.rbrow:hover{background:rgba(255,255,255,.07)}
+.rbrow input{width:20px;height:20px;accent-color:var(--lime);margin:0}
+.rbrow b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbrow .n{font-size:13px;font-weight:800;color:rgba(255,255,255,.85);font-variant-numeric:tabular-nums}
+.rbrow .done{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--lime)}
+.rbrow.off{opacity:.45;cursor:default}.rbrow.off:hover{background:none}
+.rbfoot{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;margin-top:14px}
+.rbfoot .anl-st{flex:1 1 220px}
+.anl-st{font-size:13px;font-weight:700;color:rgba(255,255,255,.85)}
+.anl-bar{width:180px;height:6px;border-radius:9px;background:rgba(255,255,255,.22);overflow:hidden}
+.anl-bar[hidden]{display:none}
+.anl-bar i{display:block;height:100%;background:#fff;transform-origin:left;transform:scaleX(0);transition:transform .4s}
+.viewtog{display:inline-flex;gap:2px;padding:3px;border-radius:999px;border:2px solid rgba(255,255,255,.85);margin-bottom:8px}
+.viewtog button{width:38px;height:34px;border:0;border-radius:999px;background:transparent;color:#fff;display:grid;place-items:center;transition:background-color .2s,color .2s}
+.viewtog button svg{width:16px;height:16px}
+.viewtog button:hover{background:rgba(255,255,255,.15)}
+.viewtog button[aria-pressed=true]{background:#fff;color:var(--ink)}
+/* list view: the same track items as compact rows inside one glass panel */
+.cards.list{display:block;border-radius:24px;overflow:hidden;background:var(--glass);border:1px solid var(--glass-line);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);box-shadow:0 24px 60px rgba(0,0,0,.28)}
+.cards.list .vcard{display:grid;grid-template-columns:34px minmax(0,1fr) auto 36px;grid-template-rows:auto;align-items:center;gap:6px 16px;min-height:0;padding:9px 14px 9px 16px;border-radius:0;
+  background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,.12);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.cards.list .vcard:last-child{border-bottom:0}
+.cards.list .vcard:hover{background:rgba(255,255,255,.06)}
+.cards.list .vcard .disc{width:30px;height:30px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 3px 8px rgba(0,0,0,.35)}
+/* SQUARE TILES (2026-11-08): every tile in tile view is exactly square, so a 1:1 cover fits with no cropping (tile background and the flipped face).
+   Text packs along the bottom; the record/cover slot sits top-left out of the flow. ROLLBACK: delete this block (or restore
+   tools/ref/crates.before-square-tiles-2026-11-08.html). */
+.open .cards:not(.list) .vcard{aspect-ratio:1/1;grid-template-rows:none;grid-auto-rows:auto;align-content:end;gap:8px;padding:14px 16px;overflow:hidden}
+.open .cards:not(.list) .vcard .disc{position:absolute;top:14px;left:16px;width:44px;height:44px}
+.open .cards:not(.list) .vcard .who b{-webkit-line-clamp:2}
+/* tile view bottom row: chips on top, then play fixed bottom-left and the flip button bottom-right */
+.cards:not(.list) .vcard .row{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"chips chips chips" "play . flip";gap:10px 6px;align-items:center}
+.cards:not(.list) .vcard .row .chips{grid-area:chips;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cards:not(.list) .vcard .row .sp{display:none}
+.cards:not(.list) .vcard .row>.ib:not(.flip){grid-area:play;justify-self:start}
+.cards:not(.list) .vcard .row .flip{grid-area:flip;justify-self:end}
+.cards.list .vcard .row .chips{display:contents}.cards.list .vcard .flip{display:none}
+.vcard .flip{background:rgba(8,10,40,.45)}
+/* flipped: only the cover (no text, chips or waveform); the flip button stays so a click turns it back */
+.cards:not(.list) .vcard.showart>:not(.row):not(.del){visibility:hidden}
+.cards:not(.list) .vcard.showart .row>:not(.flip){visibility:hidden}
+.cards:not(.list) .vcard.showart .del{visibility:hidden}
+.open .cards:not(.list) .vcard.showart,.open .cards:not(.list) .vcard.artbg.showart{background:var(--art) center/cover no-repeat,#0c0c10;border-color:rgba(255,255,255,.3)}
+/* tile view with the cover as the whole tile: the fade is darkest where the text sits; the record slot stays (invisible) so the landing record still has its target */
+.open .cards:not(.list) .vcard.artbg{background:linear-gradient(180deg,rgba(8,10,40,.10) 0%,rgba(8,10,40,.38) 22%,rgba(8,10,40,.78) 40%,rgba(8,10,40,.92) 62%,rgba(8,10,40,.95) 100%),var(--art) center/cover no-repeat,#0c0c10;border-color:rgba(255,255,255,.22)}
+.cards:not(.list) .vcard.artbg .disc{opacity:0}
+.cards:not(.list) .vcard.artbg .who b,.cards:not(.list) .vcard.artbg .who span{text-shadow:0 1px 8px rgba(0,0,0,.65)}
+.cards:not(.list) .vcard.artbg .chip{background:rgba(8,10,40,.62)}
+.cards:not(.list) .vcard.artbg .del{background:rgba(8,10,40,.6);opacity:.85}
+/* album art replaces the record symbol (top-left of the tile; same size as the record so the landing record hands over cleanly) */
+.vcard .disc.hasart{border-radius:12px;background:var(--art) center/cover no-repeat,#0c0c10}.cards.list .vcard .disc.hasart{border-radius:7px}
+.cards.list .vcard .who{display:flex;align-items:baseline;gap:12px;min-width:0}
+.cards.list .vcard .who b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset;flex:0 1 auto;min-width:0}
+.cards.list .vcard .who span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0;color:rgba(255,255,255,.72)}
+.cards.list .vcard .row{flex-wrap:nowrap;justify-content:flex-end}
+.cards.list .vcard .row .sp{display:none}
+.cards:not(.list) .vcard{grid-template-rows:auto 1fr auto auto}
+/* tile view: each tile is the crate's own colour, deeper than the sheet behind it (the waveform on it is the opposite hue) */
+.open .cards:not(.list) .vcard{background:linear-gradient(160deg,color-mix(in srgb,var(--c) 64%,rgba(10,12,46,.5)),color-mix(in srgb,var(--c) 44%,rgba(10,12,46,.7)));border-color:color-mix(in srgb,var(--c) 60%,rgba(255,255,255,.45));box-shadow:0 14px 30px color-mix(in srgb,var(--c) 28%,rgba(6,8,34,.45)),inset 0 1px 0 rgba(255,255,255,.22)}
+.open .cards:not(.list) .vcard .chip{background:color-mix(in srgb,var(--c) 28%,rgba(8,10,40,.5))}
+.open .cards:not(.list) .wv,.open .cards:not(.list) .wv-none{background:color-mix(in srgb,var(--c) 30%,rgba(8,10,40,.62))}
+.vcard[draggable=true]{cursor:grab}.vcard.dragging{opacity:.35}.vcard .ib,.vcard .wv{cursor:pointer}
+.cards:not(.list) .wv,.cards:not(.list) .wv-none{display:block;height:44px;border-radius:10px;background:rgba(10,20,70,.22)}   /* tile view: the waveform is the scrubber, the thin bar is not needed */
+.cards:not(.list) .wv-none{opacity:.5}
+.cards:not(.list) .vcard .pbar{display:none}
+/* list view = aligned columns under a sortable header: disc | title | artist | style | waveform | BPM | key | energy | play | remove */
+.cards.list .vcard,.crhead{grid-template-columns:var(--crcols,30px minmax(0,1.2fr) minmax(0,.85fr) minmax(0,1.45fr) 160px 86px 52px 86px 34px 34px)}   /* --crcols = user-dragged widths (static/colresize.js) */
+.cards.list .vcard .c-bpm{white-space:nowrap}
+.cards.list .vcard .who,.cards.list .vcard .row{display:contents}
+.cards.list .vcard .who b{grid-column:2}.cards.list .vcard .who span{grid-column:3}
+.cards.list .vcard .tags{grid-column:4;display:flex;gap:5px;min-width:0;overflow:hidden}
+.cards.list .vcard .wv,.cards.list .vcard .wv-none{grid-column:5}
+.cards.list .vcard .c-bpm{grid-column:6}.cards.list .vcard .c-key{grid-column:7}.cards.list .vcard .c-en{grid-column:8}.cards.list .vcard .c-na{grid-column:6/9;justify-self:start}
+.cards.list .vcard .row .ib{grid-column:9}.cards.list .vcard .del{grid-column:10}
+.cards.list .vcard>*{grid-row:1}
+.cards.list .vcard .pbar{display:none}   /* the waveform is the seek bar in list view */
+.cards.list .vcard .row .chip{justify-self:start}
+.crhead{display:grid;gap:6px 16px;align-items:center;padding:0 14px 0 16px;height:42px;position:sticky;top:72px;z-index:5;border-radius:24px 24px 0 0;
+  background:rgba(14,22,70,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--glass-line);border-bottom:1px solid rgba(255,255,255,.22)}
+.crhead[hidden]{display:none}
+.crhead+.cards.list{border-top-left-radius:0;border-top-right-radius:0;border-top:0}
+.crhead button{all:unset;display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7);white-space:nowrap}
+.crhead button:hover,.crhead button[aria-sort=ascending],.crhead button[aria-sort=descending]{color:#fff}
+.crhead button:focus-visible{outline:2px solid #fff;outline-offset:4px;border-radius:6px}
+.crhead svg{width:10px;height:10px;opacity:0;transition:transform .2s,opacity .15s}
+.crhead [aria-sort=ascending] svg{opacity:1}.crhead [aria-sort=descending] svg{opacity:1;transform:rotate(180deg)}
+.crhead .h-disc{grid-column:1}.crhead .h-title{grid-column:2}.crhead .h-artist{grid-column:3}.crhead .h-style{grid-column:4;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.7)}.crhead .h-wave{grid-column:5}
+.crhead .h-bpm{grid-column:6}.crhead .h-key{grid-column:7}.crhead .h-energy{grid-column:8}.crhead .h-end{grid-column:9/11}
+/* style tags: only in table view */
+@media (max-width:640px){.cards.list .vcard .tags{display:none}}
+.vcard .tags{display:none}
+.tag{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 9px;border-radius:7px;font-size:11px;font-weight:800;letter-spacing:.02em;background:color-mix(in srgb,var(--tint,#7b3fe4) 30%,rgba(255,255,255,.12));border:1px solid rgba(255,255,255,.22)}
+.cards.list .vcard .row .chip{text-align:center;min-width:78px}.cards.list .vcard .row .chip:nth-child(2){min-width:46px}   /* BPM / key / energy line up as columns */
+.cards.list .vcard .ib{width:34px;height:34px}
+.cards.list .vcard .del{position:static;width:34px;height:34px;opacity:.55}
+.cards.list .vcard .pbar{grid-column:2/-1;margin:2px 0 4px}
+.cards.list .vcard.pending{transform:translateY(6px)}
+@media (max-width:640px){.crhead{display:none!important}.cards.list .vcard{grid-template-columns:30px minmax(0,1fr) 34px}.cards.list .vcard .who,.cards.list .vcard .row{display:flex}.cards.list .vcard .wv,.cards.list .vcard .wv-none{display:none}.cards.list .vcard>*{grid-row:auto}.cards.list .vcard .row .ib{grid-column:auto}.cards.list .vcard .who{flex-direction:column;gap:2px}
+  .cards.list .vcard .row{grid-column:2/3;justify-content:flex-start;flex-wrap:wrap}.cards.list .vcard .del{grid-row:1;grid-column:3}}
+@media(max-width:44rem){.nav .pill{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* side by side: several crates open at once, tracks dragged (or "Move N here") between them. No backdrop blur over the live 3D. */
+.cmpbtn{height:46px;padding:0 20px}
+.cmppick{position:relative;z-index:6;padding:18px;margin:-12px 0 24px;display:flex;flex-direction:column;gap:12px}
+.cmppick input{height:42px;padding:0 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.4);background:transparent;font-weight:700;max-width:320px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow-y:auto}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid rgba(255,255,255,.4);background:transparent;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700}
+.chip i{width:12px;height:12px;border-radius:50%}
+.chip[aria-pressed="true"]{background:#fff;color:var(--ink);border-color:#fff}
+.pickfoot{display:flex;gap:10px}
+.cmp{position:fixed;inset:0;z-index:40;background:rgb(16,26,86);display:flex;flex-direction:column;padding:22px var(--pad) 18px}
+.cmphead{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cmphead h2{margin:0;font-size:clamp(24px,3vw,36px);font-weight:900;font-stretch:125%}.cmphead .sp{flex:1}
+.cmpcols{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--n,2),minmax(230px,1fr));gap:14px;overflow-x:auto}
+.ccol{--c:#7b3fe4;display:flex;flex-direction:column;min-height:0;border-radius:22px;background:color-mix(in srgb,var(--c) 22%,rgb(16,26,86));border:2px solid color-mix(in srgb,var(--c) 75%,transparent);transition:box-shadow .15s,border-color .15s}
+.ccol.over{border-color:var(--lime);box-shadow:inset 0 0 0 2px var(--lime)}
+.chead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:14px 16px 10px}
+.chead h3{margin:0;font-size:18px;font-weight:900;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.chead small{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.75}
+.chead .mv{padding:6px 14px;font-size:12px}
+.chead .cq{flex:1 1 100%;height:38px;padding:0 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:transparent;font-weight:700}
+.clist{list-style:none;margin:0;padding:0 8px 10px;overflow-y:auto;flex:1;min-height:0;scrollbar-width:thin;scrollbar-color:var(--c) transparent}
+.crow{display:grid;grid-template-columns:30px minmax(0,1fr) minmax(56px,1.15fr) auto 10px;gap:10px;align-items:center;padding:7px 10px;border-radius:12px;cursor:grab;user-select:none;-webkit-user-select:none}
+.crow:hover{background:rgba(255,255,255,.08)}
+.crow.sel{background:rgba(198,255,61,.2);box-shadow:inset 0 0 0 1.5px var(--lime)}
+.crow.miss{opacity:.5}
+.crow b,.crow .a{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow b{font-size:14px;font-weight:700}.crow .a{font-size:12px;opacity:.75}
+.crow .m{font-size:12px;font-weight:700;opacity:.85;font-variant-numeric:tabular-nums;white-space:nowrap}
+.crow .ib{width:30px;height:30px}.crow .ib svg{width:12px;height:12px}
+.crow .wv{height:26px}.crow .wv-none{display:block}
+.crow:has(.ib[data-s="play"]){background:rgba(255,255,255,.12)}.crow:has(.ib[data-s="play"]) .ib{background:#fff;color:var(--ink);border-color:#fff}
+.ccol{container-type:inline-size}
+@container (max-width:330px){.crow{grid-template-columns:26px minmax(0,1fr) minmax(44px,1fr) auto 8px;gap:6px;padding:6px 6px}.crow .ib{width:26px;height:26px}.crow b{font-size:13px}.crow .a,.crow .m{font-size:11px}.crow .wv{height:22px}}
+@container (max-width:260px){.crow .m{display:none}.crow{grid-template-columns:26px minmax(0,1fr) minmax(40px,.9fr) 0 8px}}
+.crow .both{width:9px;height:9px;border-radius:50%;background:var(--lime)}
+.ctoast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:14px;padding:10px 12px 10px 20px;border-radius:999px;background:rgba(20,6,46,.94);border:1px solid rgba(255,255,255,.2);font-weight:700;font-size:14px}
+.ctoast .ghost{padding:6px 14px;font-size:12px}
+.ctoast{max-width:min(720px,calc(100vw - 24px));border-radius:22px}
+.ctoast #ctmsg{line-height:1.35}
+.ctoast:has(#ctundo[hidden]){padding:12px 22px;justify-content:center;text-align:center}   /* no Undo button: even padding, text centred (the lopsided padding is for the button) */
+.ctoast #ctmsg{min-width:0}
+.ctoast[hidden],#ctundo[hidden]{display:none}
+.cdj-scrim{z-index:58}
+.cdj{position:fixed;z-index:59;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 40px);display:flex;flex-direction:column;border-radius:26px;padding:0;overflow:hidden;background:rgba(20,6,46,.96)}
+.cdj[hidden]{display:none}
+.cdj-h{display:flex;align-items:center;gap:12px;padding:16px 18px 12px 22px;border-bottom:1px solid rgba(255,255,255,.14)}
+.cdj-h h2{margin:0;flex:1;font-size:20px;font-weight:900}
+.cdj-b{padding:14px 22px 20px;overflow:auto;overscroll-behavior:contain;display:grid;gap:14px;font-size:14px;font-weight:600}
+.cdj h3{margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.cdj .opt{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:16px;border:1.5px solid rgba(255,255,255,.25);cursor:pointer;margin-bottom:6px}
+.cdj .opt:has(input:checked){border-color:#c6ff3d;background:rgba(198,255,61,.08)}
+.cdj .opt input{accent-color:#c6ff3d;width:18px;height:18px;flex:none}
+.cdj .opt .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800}
+.cdj .opt small{opacity:.7;font-weight:700;white-space:nowrap}
+.cdj .tagl{font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px;background:rgba(255,255,255,.14)}
+.cdj .tagl.warn{background:#ffb23d;color:#14062e}
+.cdj .cfilt{display:flex;gap:8px;align-items:center;margin-bottom:8px}.cdj .cfilt input[type=search]{flex:1;min-width:0;height:34px;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;padding:0 14px;font:inherit;outline:0}.cdj .cfilt input::placeholder{color:rgba(255,255,255,.55)}.cdj .cfilt .linkb{white-space:nowrap}
+.cdj .clist{max-height:230px;overflow:auto;overscroll-behavior:contain;display:grid;gap:2px}
+.cdj .clist .opt{padding:7px 12px;margin:0;border-radius:12px}
+.cdj .note{font-size:12.5px;opacity:.78;line-height:1.45;font-weight:600}
+.cdj .warnbox{border-radius:14px;padding:10px 14px;background:rgba(255,178,61,.16);border:1px solid #ffb23d;line-height:1.4}
+.cdj .warnbox label{display:flex;gap:10px;align-items:flex-start;margin-top:8px;cursor:pointer}
+.cdj .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cdj .acts .sp{flex:1}
+.cdj .go{height:42px;padding:0 22px;border-radius:999px;border:0;background:#c6ff3d;color:#14062e;font:900 13px Archivo,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.cdj .go:disabled{opacity:.4;cursor:default}
+.cdj .linkb{all:unset;cursor:pointer;font-size:12.5px;font-weight:700;text-decoration:underline;opacity:.8}
+.cdj .prog{height:6px;border-radius:6px;background:rgba(255,255,255,.16);overflow:hidden}.cdj .prog i{display:block;height:100%;background:#ff5fa8;transform-origin:left;transition:transform .3s}
+.cdj .done{border-radius:14px;padding:12px 14px;background:rgba(198,255,61,.12);border:1px solid #c6ff3d;line-height:1.45}
+.cdj .leftout{margin-top:10px;border-top:1px solid rgba(255,255,255,.2);padding-top:8px}.cdj .leftout summary{cursor:pointer;font-weight:800;color:#ffb23d}.cdj .leftout ul{list-style:none;margin:8px 0 0;padding:0;max-height:200px;overflow:auto;overscroll-behavior:contain;display:grid;gap:6px}.cdj .leftout li{display:grid;gap:1px;font-size:13px}.cdj .leftout li b{font-weight:800}.cdj .leftout li span{opacity:.75;font-size:12px}
+.cdj .bad{border-radius:14px;padding:12px 14px;background:rgba(255,95,168,.16);border:1px solid #ff5fa8;line-height:1.45}
+.cmenu{position:fixed;z-index:60;min-width:200px;padding:6px;border-radius:16px;display:grid;gap:2px;background:rgba(20,6,46,.94);border:1px solid rgba(255,255,255,.2);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.cmenu button{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 14px;border-radius:10px;font-weight:700;font-size:14px;color:#fff}
+.cmenu button:hover,.cmenu button:focus-visible{background:rgba(255,255,255,.16)}
+.cmenu hr{border:0;border-top:1px solid rgba(255,255,255,.16);margin:4px 6px}.cmenu button.danger{color:#ff9cc6}.cmenu button.danger:hover,.cmenu button.danger:focus-visible{background:rgba(255,95,168,.22)}
+</style>
+<link rel="stylesheet" href="/static/site.css"><script src="/static/nav.js" defer></script><script src="/static/addtracks.js" defer></script><script src="/static/drivebar.js" defer></script><script src="/static/wave.js" defer></script>
+<style>html.wf-plw main{visibility:hidden}</style>
+<script>/* opened from the Files pill (?stick=&pl=): keep the page hidden until the Library has snapped to the crate, so nothing is seen to scroll */
+if(/[?&]stick=/.test(location.search)){document.documentElement.classList.add('wf-plw');setTimeout(()=>document.documentElement.classList.remove('wf-plw'),5000)}</script>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<header class="nav">
+  <a class="logo" href="/" aria-label="Waxfinder home">wax<span class="wdot" aria-hidden="true"></span>finder</a>
+  <nav class="pill" aria-label="Sections"><a href="/#top">Discover</a><a href="/#picks">Picks</a><a class="on" href="/crates" aria-current="page">Crates</a><a href="/crates#library">Library</a><a href="/set">Set</a></nav>
+</header>
+<main>
+  <section class="hero">
+    <h1 data-wave="#ff2e88"><span>Crates.</span></h1>
+    <button class="go blobby pink" id="newcrate" type="button"><span>New crate</span></button>
+    <aside id="wf-anl" aria-label="Track analysis">
+      <button id="wf-anl-x" type="button" aria-label="Dismiss analyse" title="Dismiss"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
+      <button class="ghost" id="wf-anl-action" type="button" disabled>Loading analysis status…</button>
+      <div id="wf-anl-details" aria-live="polite"></div>
+      <p id="wf-anl-current"></p><p id="wf-anl-updated" role="status">Connecting to your library…</p>
+    </aside>
+    <div class="crtools" role="toolbar" aria-label="Crate tools">
+      <label class="csearchwrap"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input type="search" id="cratesearch" class="csearch" placeholder="Search crates" aria-label="Search crates" autocomplete="off"></label>
+      <span class="viewtog crtog" role="group" aria-label="Crates view"><button type="button" data-m="grid" aria-label="Full view" title="Full view"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="2" y="9" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="9" y="9" width="5" height="5" rx="1.2" fill="currentColor"/></svg></button><button type="button" data-m="table" aria-label="Table view" title="Table view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></span>
+      <label class="csortwrap" title="Sort crates"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M5 13l-2.5-2.5M5 13l2.5-2.5M11 13V3M11 3 8.5 5.5M11 3l2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><select id="cratesort" class="csort" aria-label="Sort crates"><option value="manual">My order</option><option value="az">Name A–Z</option><option value="za">Name Z–A</option><option value="most">Most tracks</option><option value="fewest">Fewest tracks</option><option value="updated">Recently updated</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="colour">Colour</option></select></label>
+      <button class="ib cmpbtn" id="cmpbtn" type="button" aria-haspopup="dialog" aria-label="Compare crates side by side" title="Compare crates side by side"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.8" y="2.5" width="5.2" height="11" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="9" y="2.5" width="5.2" height="11" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    </div>
+    <form class="newform" id="newform" hidden><input id="newname" maxlength="60" placeholder="Name your crate" aria-label="Crate name" autocomplete="off"><button class="ghost lime" type="submit">Create</button><button class="ghost" type="button" id="rbbtn">From Rekordbox</button><button class="ghost" type="button" id="m3ubtn">From file</button><input type="file" id="m3ufile" accept=".m3u,.m3u8,audio/x-mpegurl" hidden><button class="ghost" type="button" id="newcancel">Cancel</button></form>
+  </section>
+  <section class="adder glass" id="rbpanel" hidden aria-label="Import Rekordbox playlists">
+    <div class="adhead"><h3>From Rekordbox</h3>
+      <input type="search" id="rbq" placeholder="Search playlists" aria-label="Search playlists" autocomplete="off">
+      <button class="ghost" id="rball" type="button">Tick shown</button><button class="ghost" id="rbnone" type="button">Clear</button><button class="ghost" id="rbclose" type="button">Close</button></div>
+    <ol class="adlist" id="rblist"></ol>
+    <div class="rbfoot"><button class="ghost lime" id="rbgo" type="button" disabled>Import</button><span class="anl-st" id="rbst" role="status"></span></div>
+  </section>
+  <div class="cmppick glass" id="cmppick" hidden role="group" aria-label="Pick crates to compare">
+    <input type="search" id="cmpq" placeholder="Search crates" aria-label="Search crates" autocomplete="off">
+    <div class="chips" id="cmpchips"></div>
+    <div class="pickfoot"><button class="ghost lime" id="cmpgo" type="button">Open</button><button class="ghost" id="cmpcancel" type="button">Cancel</button></div>
+  </div>
+  <section class="stage" id="stage" aria-label="Your crates"></section>
+  <p class="empty" id="empty" hidden>No crates yet. Start one with New crate.</p>
+  <div class="cpop glass" id="cpop" hidden role="group" aria-label="Crate colour"></div>
+  <div class="scrim" id="scrim" hidden></div>
+  <section class="open" id="open" hidden aria-live="polite" role="dialog" aria-label="Crate">
+    <div class="rhead"><div class="crate-heading"><h2 id="oname" tabindex="0" role="button" aria-label="Rename crate" title="Click to rename"></h2><span class="blob tint" id="oblob"><span id="ocount"></span></span></div>
+      <div class="crate-actions">
+      <span class="viewtog" role="group" aria-label="View"><button type="button" data-v="cards" aria-label="Card view" title="Cards"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="9" y="2" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="2" y="9" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="9" y="9" width="5" height="5" rx="1.2" fill="currentColor"/></svg></button><button type="button" data-v="list" aria-label="List view" title="List"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></span>
+      <button id="oadd" type="button" aria-label="Add tracks" title="Add tracks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><a class="ghost lime" id="obuild" href="/set">Build a set</a><button id="ocolour" type="button" aria-label="Change crate colour" title="Change crate colour" aria-haspopup="true" aria-expanded="false"></button><button class="ghost" id="oexport" type="button" title="Put this crate on a CDJ-ready USB stick">Export</button><button class="ghost" id="odelete" type="button">Delete</button><button class="ghost" id="oclose" type="button">Close</button></div></div>
+    <div class="crhead" id="crhead" hidden role="group" aria-label="Sort"></div>
+    <div class="obody" id="obody">
+    <ol class="cards" id="cards"></ol>
+    <div class="adder glass" id="adder" hidden>
+      <div class="adhead"><h3>Add tracks</h3>
+        <input type="search" id="adq" placeholder="Search your library" aria-label="Search your library" autocomplete="off">
+        <select id="adsort" aria-label="Sort"><option value="new">Newest</option><option value="artist">Artist A–Z</option><option value="title">Title A–Z</option><option value="bpmup">BPM low to high</option><option value="bpmdown">BPM high to low</option><option value="key">Key</option><option value="energy">Energy</option></select>
+        <button class="ghost" id="addone" type="button">Done</button></div>
+      <ol class="adlist" id="adlist"></ol>
+    </div>
+    </div>
+  </section>
+  <section class="cmp" id="cmp" hidden role="dialog" aria-label="Side by side">
+    <div class="cmphead"><h2>Side by side</h2><span class="sp"></span><button class="ghost" id="cmpclose" type="button">Close</button></div>
+    <div class="cmpcols" id="cmpcols"></div>
+  </section>
+  <div class="scrim cdj-scrim" id="cdjscrim" hidden></div>
+  <section class="cdj glass" id="cdj" hidden role="dialog" aria-label="Export to CDJ stick" aria-modal="true">
+    <div class="cdj-h"><h2>Export to CDJ stick</h2><button class="ghost" id="cdjx" type="button">Close</button></div>
+    <div class="cdj-b" id="cdjbody"></div>
+  </section>
+  <div class="ctoast" id="ctoast" hidden role="status"><span id="ctmsg"></span><button class="ghost" id="ctundo" type="button">Undo</button></div>
+  <section id="library"></section>   <!-- built by /static/library.js: every track, filters, drag onto the crate dock -->
+</main>
+<div class="undo" id="undo" hidden role="status"><span id="undotxt"></span><button type="button" id="undobtn">Undo</button></div>
+<script src="/static/colresize.js"></script>
+<script src="/static/player.js"></script>
+<script src="/static/miniwave.js"></script>
+<style>
+#wf-anl{position:fixed;right:16px;bottom:calc(var(--wxp-h,0px) + 16px);transition:bottom .35s cubic-bezier(.2,.8,.2,1);z-index:60;width:340px;max-width:calc(100vw - 32px);padding:14px;border-radius:22px;background:rgba(14,22,70,.96);border:1px solid rgba(255,255,255,.4);box-shadow:0 14px 34px rgba(20,6,46,.35);color:#fff;font-size:12px}
+#wf-anl-action{width:100%;min-height:44px;padding:10px 14px;border:0;border-radius:999px;background:linear-gradient(135deg,#ff2e88,#ff7a2e);color:#fff;font:800 13px var(--font);cursor:pointer}
+#wf-anl-action:disabled{cursor:default}
+#wf-anl[hidden]{display:none}
+#wf-anl-x{position:absolute;top:-9px;right:-3px;z-index:1;width:24px;height:24px;padding:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(20,6,46,.95);color:#fff;cursor:pointer;display:grid;place-items:center}
+#wf-anl-x[hidden]{display:none}
+#wf-anl-x svg{display:block}
+#wf-anl-x:hover{border-color:#fff}
+#wf-anl-x:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+#wf-anl-action:focus-visible{outline:3px solid var(--lime);outline-offset:3px}
+#wf-anl-action.busy{background:linear-gradient(90deg,#ff2e88 calc(var(--p,0)*100%),rgba(255,255,255,.12) calc(var(--p,0)*100%));box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+#wf-anl-details{display:grid;gap:5px;margin-top:12px}
+#wf-anl-details div{display:flex;justify-content:space-between;gap:12px}
+#wf-anl-details span{text-align:right}
+#wf-anl .wf-anl-do{width:auto;min-height:0;padding:3px 10px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:transparent;color:#fff;font:800 11px var(--font);cursor:pointer;box-shadow:none}
+#wf-anl .wf-anl-do:hover:not(:disabled){background:#fff;color:#14062e}
+#wf-anl .wf-anl-do:disabled{opacity:.6;cursor:default}
+#wf-anl-current,#wf-anl-updated{margin:8px 0 0;overflow-wrap:anywhere;line-height:1.4}
+#wf-anl-current:empty{display:none}
+#wf-anl-updated{opacity:.75;font-size:11px}
+/* compact by default (it sat on top of the Library table): just the pill; the full status opens on hover / keyboard focus */
+#wf-anl{width:auto;padding:0;background:transparent;border-color:transparent;box-shadow:none}
+#wf-anl #wf-anl-action{box-shadow:0 12px 30px rgba(255,46,136,.45)}
+#wf-anl #wf-anl-action{width:auto;height:44px;min-height:44px;padding:0 18px;font-size:12px;letter-spacing:.07em;text-transform:uppercase}
+#wf-anl #wf-anl-details,#wf-anl p{display:none}
+#wf-anl.exp,#wf-anl.exp{width:340px;padding:14px;background:rgba(14,22,70,.96);border-color:rgba(255,255,255,.4);box-shadow:0 14px 34px rgba(20,6,46,.35)}
+#wf-anl.exp #wf-anl-action,#wf-anl.exp #wf-anl-action{box-shadow:none}
+#wf-anl.exp #wf-anl-action,#wf-anl.exp #wf-anl-action{width:100%}
+#wf-anl.exp #wf-anl-details,#wf-anl.exp #wf-anl-details{display:grid}
+#wf-anl.exp p,#wf-anl.exp p{display:block}
+#wf-anl.exp #wf-anl-current:empty,#wf-anl.exp #wf-anl-current:empty{display:none}
+</style>
+<script id="wf-analysis-controller">
+/* Inline so Crates never depends on a separately cached/blocked popup script. */
+(function () {
+  const box=document.getElementById('wf-anl'),btn=document.getElementById('wf-anl-action');
+  const details=document.getElementById('wf-anl-details'),current=document.getElementById('wf-anl-current'),updated=document.getElementById('wf-anl-updated');
+  let timer=0,checking=false,ready=false,wasBusy=false,lastUpdate='';
+  /* Dismiss: hidden until there are MORE tracks to analyse than when it was dismissed (new downloads), so it never nags about the same pile */
+  /* Click the pill to open the status panel (like the Files pill); click outside or press Escape to close. Inside the open panel
+     the big button starts the analysis. */
+  const closePanel=()=>{if(!box.classList.contains('exp'))return;box.classList.remove('exp');applyDismiss()};
+  document.addEventListener('pointerdown',e=>{if(box.classList.contains('exp')&&!box.contains(e.target))closePanel()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel()});
+  const DKEY='wf-anl-dismissed';let lastTracks=0;
+  const dismissedAt=()=>{try{const v=localStorage.getItem(DKEY);return v===null?null:Number(v)}catch(e){return null}};
+  let idle=false;const xb=document.getElementById('wf-anl-x');const applyDismiss=()=>{const at=dismissedAt(),open=box.classList.contains('exp');box.hidden=xb.hidden=!open&&(idle||(at!==null&&lastTracks<=at))};
+  xb.addEventListener('click',e=>{e.stopPropagation();try{localStorage.setItem(DKEY,String(lastTracks))}catch(x){}box.hidden=xb.hidden=true});
+  const stages=[['analysis','BPM, key & energy'],['sound','Sound matching'],['waves','Waveforms'],['genres','Genre tags'],['artists','Artist names']];
+  function retry(message) {
+    ready=false;btn.disabled=false;btn.classList.remove('busy');btn.textContent='Retry status';
+    updated.textContent=message+(lastUpdate?' Last updated '+lastUpdate+'.':'');
+    clearTimeout(timer);timer=setTimeout(check,15000);
+  }
+  async function request(url,method,body) {
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+    try {const r=await fetch(url,{method:method||'GET',cache:'no-store',signal:controller.signal,...(body?{headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{})});
+      if(!r.ok)throw new Error('Request failed');return await r.json();
+    } finally {clearTimeout(timeout)}
+  }
+  function draw(d) {
+    if(!d.jobs||!d.need||typeof d.busy!=='boolean'||typeof d.tracks!=='number')throw new Error('Invalid status');
+    const jobs=d.jobs,active=stages.map(([k])=>jobs[k]||{}).filter(j=>j.state==='working'||j.busy);
+    const primary=active[0]||{},done=Number(primary.done)||0,total=Number(primary.total)||0;
+    const genreWait=jobs.genres?.state==='paused'&&jobs.genres.retry_at>Date.now()/1000;
+    const onlyGenreWait=genreWait&&!d.need.analysis&&!d.need.sound&&!d.need.waves;
+    btn.classList.toggle('busy',d.busy);btn.disabled=d.busy||!d.tracks||onlyGenreWait;
+    btn.style.setProperty('--p',total?Math.min(1,done/total):0);
+    btn.textContent=d.busy?('Analysing '+(total?done+' of '+total+' · '+Math.round(done/total*100)+'%':'tracks…')):d.tracks?'Analyse '+d.tracks+' tracks':'Tracks analysed';
+    if(!d.busy&&onlyGenreWait)btn.textContent='Genre lookup paused';
+    details.replaceChildren(...stages.map(([key,label])=>{
+      const j=jobs[key]||{},remaining=Number(d.need[key])||0,working=j.state==='working'||j.busy;
+      let text=working?(j.total?j.done+' of '+j.total:'Working…'):remaining?remaining+(j.state==='paused'?' waiting':' remaining'):'Up to date';
+      if(j.errors)text+=' · '+j.errors+' failed';
+      if(j.error&&j.state!=='paused')text+=(key==='genres'?' · lookup interrupted':' · error');
+      else if(j.state==='paused')text+=' · paused';
+      const row=document.createElement('div'),name=document.createElement('b'),value=document.createElement('span');
+      name.textContent=label;
+      const mk=(t,fn)=>{const b=document.createElement('button');b.type='button';b.className='wf-anl-do';b.textContent=t;b.onclick=fn;return b};
+      if(!working&&remaining&&!d.busy&&!(key==='genres'&&genreWait)) value.append(mk(text,async e=>{e.stopPropagation();e.target.disabled=true;e.target.textContent='Starting…';try{await request('/library/analyse','POST',{only:key});await check()}catch(x){retry('Could not start that check.')}}));
+      else value.textContent=text;
+      if(key==='artists'&&!working&&d.review){const go=mk(d.review+' to review',()=>{location.href='/clean#artists'});if(value.firstChild)value.prepend(go,' · ');else{value.textContent='';value.append(go)}}
+      row.append(name,value);return row;
+    }));
+    current.textContent=primary.current?'Current: '+primary.current:'';
+    lastUpdate=new Date().toLocaleTimeString();updated.textContent='Updated '+lastUpdate;
+    const genreError=jobs.genres?.error||'';
+    if(/browser (?:failed|could not launch|could not start)/i.test(genreError))updated.textContent+=' · The Traxsource search browser could not start.';
+    else if(/browser returned no page/i.test(genreError))updated.textContent+=' · The Traxsource search browser returned no results page.';
+    else if(/its search window/i.test(genreError))updated.textContent+=' · Finish verification in the separate Traxsource Chrome window; lookup will resume.';
+    else if(/browser (?:check|verification)/i.test(genreError))updated.textContent+=' · Traxsource needs browser verification.';
+    else if(/timed out/i.test(genreError))updated.textContent+=' · A genre search timed out.';
+    if(genreWait)updated.textContent+=' · Automatically retries at '+new Date(jobs.genres.retry_at*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'.';
+    if(jobs.genres?.query_rejected)updated.textContent+=' · '+jobs.genres.query_rejected+' tracks have rejected search text and need checking.';
+    ready=true;lastTracks=d.tracks;idle=!d.busy&&!d.tracks&&!onlyGenreWait;applyDismiss();
+    window.__wfAnlLast={tracks:d.tracks,busy:d.busy,done,total,paused:!d.busy&&!!onlyGenreWait};document.dispatchEvent(new CustomEvent('wf-anl-status',{detail:window.__wfAnlLast}));
+    if(wasBusy&&!d.busy)document.dispatchEvent(new CustomEvent('wf-analysed'));
+    wasBusy=d.busy;
+  }
+  async function check() {
+    if(checking)return;checking=true;clearTimeout(timer);
+    try {const d=await request('/library/pending');draw(d);timer=setTimeout(check,d.busy?2500:15000)}
+    catch(e){retry('Cannot refresh analysis status.')}
+    finally {checking=false}
+  }
+  async function start(){
+    if(!ready){btn.disabled=true;btn.textContent='Refreshing status…';await check();return}
+    clearTimeout(timer);btn.disabled=true;btn.textContent='Starting analysis…';
+    try {await request('/library/analyse','POST');await check()}
+    catch(e){retry('Could not confirm analysis started.')}
+  }
+  btn.addEventListener('click',()=>{if(!box.classList.contains('exp')){box.classList.add('exp');return}start()});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+  window.wfAnalyse={check,start,show:()=>{try{localStorage.removeItem(DKEY)}catch(e){}box.hidden=false;box.classList.add('exp');check()}}; /* show: bring the corner panel back (open) after it was dismissed */check();
+})();
+</script>
+<script>
+/* Crates: browse, open (vinyls fly out into cards via /static/crates3d.js), remove tracks, build a set from one. */
+const $=id=>document.getElementById(id);
+const el=(t,p,...k)=>{const e=document.createElement(t);Object.assign(e,p||{});k.forEach(c=>c!=null&&e.append(c));return e};
+const post=(u,b)=>fetch(u,{method:'POST',body:JSON.stringify(b)}).then(r=>r.json());
+const COL={purple:'#7b3fe4',sky:'#8ec5f0',sage:'#79b47e',pink:'#ff5fa8',amber:'#ffb23d',lime:'#c6ff3d'};
+const ICON={play:'<svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>',stop:'<svg viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1.5" fill="currentColor"/></svg>',
+  x:'<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'};
+let data={crates:[],sets:[]},cur=null,scene=null,scene3dFailed=false;
+/* previews play in the site-wide player bar (static/player.js); next/prev = the neighbouring track in the same list */
+function crStep(n){if(!playing)return false;const box=playing.btn.closest('ul,ol')||document,bs=[...box.querySelectorAll('button.ib:not(.del)')],i=bs.indexOf(playing.btn),b=bs[i+n];if(i<0||!b)return false;b.click();return true}
+const aud=WaxPlayer.audio({next:()=>crStep(1),prev:()=>crStep(-1)});let playing=null;
+/* One preview player. playing = {key,id,btn,bar,wrap,cur,dur}; key = 'c:'/'a:' + id (card / add-tracks row). */
+const mmss=x=>{x=Math.max(0,Math.floor(x||0));return Math.floor(x/60)+':'+String(x%60).padStart(2,'0')};
+const waveOf=id=>document.querySelector('#cards .wv[data-id="'+id+'"]');
+function uiOff(p){p.btn.innerHTML=ICON.play;p.btn.dataset.s='';p.btn.setAttribute('aria-label','Preview');p.bar.firstChild.style.transform='scaleX(0)';(p.wrap||p.bar).hidden=true;
+  const wv=p.wv||waveOf(p.id);if(wv)MiniWave.bar(wv).style.transform='scaleX(0)'}
+function uiOn(p){p.btn.innerHTML=ICON.stop;p.btn.dataset.s='play';p.btn.setAttribute('aria-label','Stop preview');(p.wrap||p.bar).hidden=false;tick()}
+function tick(){const p=playing;if(!p)return;const d=aud.duration||0,t=aud.currentTime||0;
+  p.bar.firstChild.style.transform='scaleX('+(d?t/d:0)+')';p.bar.setAttribute('aria-valuenow',Math.round(t));
+  const wv=p.wv||waveOf(p.id);if(wv)MiniWave.bar(wv).style.transform='scaleX('+(d?t/d:0)+')';if(p.cur){p.cur.textContent=mmss(t);p.dur.textContent=d?mmss(d):''}}
+function stopP(){if(!playing)return;aud.pause();uiOff(playing);playing=null}
+window.wfReloadCrates=()=>load();window.wfCrates=()=>data;   // used by /static/library.js
+aud.addEventListener('play',()=>dispatchEvent(new Event('wf-crate-play')));addEventListener('wf-lib-play',stopP);   // one preview at a time across crates + library
+aud.onended=stopP;aud.ontimeupdate=tick;aud.onemptied=()=>{if(playing){uiOff(playing);playing=null}};
+aud.onpause=()=>{if(playing&&!aud.ended){playing.btn.innerHTML=ICON.play;playing.btn.dataset.s=''}};aud.onplaying=()=>{if(playing){playing.btn.innerHTML=ICON.stop;playing.btn.dataset.s='play'}};aud.onloadedmetadata=()=>{if(playing&&playing.seekTo!=null&&aud.duration){aud.currentTime=playing.seekTo*aud.duration;playing.seekTo=null}tick()};
+/* mini waveform click/drag: play this track from that point (starts it if it isn't the one playing) */
+function crateSeek(t,pb,f,key){key=key||'c:'+t.id;if(playing&&playing.key===key){if(aud.duration)aud.currentTime=f*aud.duration;else playing.seekTo=f;return}
+  pb.click();if(playing&&playing.key===key)playing.seekTo=f}
+function player(key,id,btn,bar,wrap,cur,dur,meta){const me={key,id,btn,bar,wrap,cur,dur};
+  btn.onclick=()=>{if(playing&&playing.key===key){if(aud.paused){aud.play().catch(()=>{});return}stopP();return}stopP();aud.meta=meta||null;aud.src='/play?id='+encodeURIComponent(id);aud.play().catch(()=>{});playing=me;uiOn(me)};
+  if(playing&&playing.key===key){playing=me;uiOn(me)}return me}
+function seekBar(){const b=el('div',{className:'pbar',role:'slider',tabIndex:0,ariaLabel:'Seek',hidden:true},el('i'));let drag=false;
+  const to=e=>{if(!playing||playing.bar!==b||!aud.duration)return;const r=b.getBoundingClientRect();aud.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*aud.duration};
+  b.onpointerdown=e=>{drag=true;b.setPointerCapture(e.pointerId);to(e)};b.onpointermove=e=>{if(drag)to(e)};b.onpointerup=b.onpointercancel=()=>{drag=false};
+  b.onkeydown=e=>{const d=e.key==='ArrowRight'?5:e.key==='ArrowLeft'?-5:0;if(!d||!playing||playing.bar!==b||!aud.duration)return;e.preventDefault();aud.currentTime=Math.max(0,Math.min(aud.duration,aud.currentTime+d))};
+  return b}
+
+let cq='',cmode='grid';try{cmode=localStorage.getItem('wf.cratesmode')==='table'?'table':'grid'}catch(e){}
+function setCMode(m){cmode=m;try{localStorage.setItem('wf.cratesmode',m)}catch(e){}document.querySelectorAll('.crtog button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));if(scene&&scene.setMode)scene.setMode(m)}
+document.addEventListener('click',e=>{const b=e.target.closest('.crtog button');if(b)setCMode(b.dataset.m)});
+let xsort='manual';try{xsort=localStorage.getItem('wf.cratessort')||'manual'}catch(e){}
+const hue=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h||'');if(!m)return 999;const n=parseInt(m[1],16),r=(n>>16&255)/255,g=(n>>8&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;if(d<.12)return 400+mx;let x=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;return (x*60+360)%360};
+const XSORTS={az:(a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}),za:(a,b)=>b.name.localeCompare(a.name,undefined,{numeric:true,sensitivity:'base'}),
+  most:(a,b)=>b.tracks.length-a.tracks.length||XSORTS.az(a,b),fewest:(a,b)=>a.tracks.length-b.tracks.length||XSORTS.az(a,b),
+  updated:(a,b)=>(b.updated||b.created||0)-(a.updated||a.created||0),newest:(a,b)=>(b.created||0)-(a.created||0),oldest:(a,b)=>(a.created||0)-(b.created||0),colour:(a,b)=>hue(a.colour)-hue(b.colour)||XSORTS.az(a,b)};
+const shown=()=>{let l=cq?data.crates.filter(c=>c.name.toLowerCase().includes(cq)):data.crates;return XSORTS[xsort]?l.slice().sort(XSORTS[xsort]):l};
+function redraw(){const l=shown();$('empty').hidden=!!l.length;
+  $('empty').textContent=data.crates.length?'No crates match “'+$('cratesearch').value.trim()+'”.':'No crates yet. Start one with New crate.';
+  if(scene)scene.update(l);else if(scene3dFailed)drawFlat()}
+async function load(){data=await (window.wfData0&&!window.wfData0.used?(window.wfData0.used=true,window.wfData0):Promise.resolve(null)).then(d=>d||fetch('/crates/data').then(r=>r.json()));try{localStorage.setItem('wf.cratesCache',JSON.stringify(data))}catch(e){}redraw();
+  document.dispatchEvent(new CustomEvent('wf-crates',{detail:data}));   // the Library table below (dots, crate filter, dock)
+  if(cur){const c=data.crates.find(x=>x.id===cur);if(c)drawCards(c,false);else closeCrate()}}
+/* drag order from the 3D crates: save it, and keep the local list in the same order (no rebuild, the scene already shows it) */
+async function saveOrder(ids){   // dragging while sorted makes the sorted order your own
+  if(xsort!=='manual'){xsort='manual';$('cratesort').value='manual';try{localStorage.setItem('wf.cratessort','manual')}catch(e){}}   // ids may be a filtered subset: they reorder within the slots they already hold, hidden crates stay put
+  const hold=new Set(ids),slots=[];data.crates.forEach((c,i)=>{if(hold.has(c.id))slots.push(i)});
+  const by=new Map(data.crates.map(c=>[c.id,c])),next=data.crates.slice();slots.forEach((at,k)=>{next[at]=by.get(ids[k])});data.crates=next;
+  try{await post('/crates/order',{ids:next.map(c=>c.id)})}catch(e){}}
+function drawFlat(){const st=$('stage');st.classList.add('flat');
+  st.replaceChildren(...shown().map(c=>{const b=el('button',{type:'button',className:'crate-b'},c.name,el('small',{textContent:c.tracks.length+(c.tracks.length===1?' track':' tracks')}));b.style.borderColor=COL[c.colour]||c.colour;b.onclick=()=>openCrate(c.id);return b}))}
+
+/* list header: click Title / Artist / BPM / Key / Energy to sort (asc, desc, then back to crate order); remembered */
+const CSORT=[['title','Title'],['artist','Artist'],['bpm','BPM'],['key','Key'],['energy','Energy']];
+let csort={k:null,d:1};try{const v=JSON.parse(localStorage.getItem('wf.cratesort')||'null');if(v&&CSORT.some(c=>c[0]===v.k))csort=v}catch(e){}
+const keyN=k=>k?parseInt(k)*2+(String(k).slice(-1)==='B'?1:0):null;
+function sortTracks(ts){if(!csort.k)return ts;const k=csort.k,v=t=>t.missing&&!t.analysed?null:k==='key'?keyN(t.key):k==='title'||k==='artist'?((t[k]||'').toLowerCase()||null):t[k];
+  return [...ts].sort((a,b)=>{const x=v(a),y=v(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;return (typeof x==='string'?x.localeCompare(y):x-y)*csort.d})}
+function drawHead(){const ARR='<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 6.5l3-3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  $('crhead').replaceChildren(el('span',{className:'h-disc'}),...CSORT.flatMap(([k,l])=>{const on=csort.k===k;
+    const b=el('button',{type:'button',className:'h-'+k,innerHTML:'<span></span>'+ARR});b.firstChild.textContent=l;
+    b.setAttribute('aria-sort',on?(csort.d>0?'ascending':'descending'):'none');
+    b.onclick=()=>{if(csort.k!==k)csort={k,d:k==='energy'?-1:1};else if(csort.d===(k==='energy'?-1:1))csort.d=-csort.d;else csort={k:null,d:1};
+      try{localStorage.setItem('wf.cratesort',JSON.stringify(csort))}catch(e){}drawHead();const c=data.crates.find(x=>x.id===cur);if(c)drawCards(c,false)};
+    return k==='artist'?[b,el('span',{className:'h-style'},'Style'),el('span',{className:'h-wave'})]:[b]}),el('span',{className:'h-end'}))}
+/* cards / list toggle: same items, the container class switches the layout */
+let view='cards';try{if(localStorage.getItem('wf.crateview')==='list')view='list'}catch(e){}
+function setView(v){view=v;$('cards').classList.toggle('list',v==='list');$('crhead').hidden=v!=='list';
+  document.querySelectorAll('.open .viewtog button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
+  try{localStorage.setItem('wf.crateview',v)}catch(e){}}
+document.querySelectorAll('.open .viewtog button').forEach(b=>b.onclick=()=>setView(b.dataset.v));drawHead();setView(view);
+ColResize.grid($('crhead'),'crate',['30px','minmax(0,1.2fr)','minmax(0,.85fr)','minmax(0,1.45fr)','160px','86px','52px','86px','34px','34px'],'--crcols');
+function waveColOf(colour){
+  const hx=/^#?([0-9a-f]{6})$/i.exec(COL[colour]||colour||''),rgb=hx?[0,8,16].map(k=>parseInt(hx[1],16)>>(16-k)&255):[198,255,61];
+  // wave colour = the tile's opposite on the colour wheel (orange tile -> blue wave, purple -> green), bass a deeper shade of it (pastel, so orange gets baby blue)
+  return (()=>{const [r,g,b]=rgb.map(v=>v/255),mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;
+    if(d){h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h=(h*60+360)%360}
+    let o=(h+180)%360;if(o>55&&o<115)o+=28;   // yellow-greens read sickly: push them to a clean green
+    return {peak:'hsl('+o+',90%,86%)',bass:'hsl('+o+',80%,70%)'}})();}
+function drawCards(c,pending){
+  if(!$('oname').querySelector('input'))$('oname').textContent=c.name;$('ocount').textContent=c.tracks.length+(c.tracks.length===1?' track':' tracks');
+  $('obuild').href='/set?crate='+encodeURIComponent(c.id);
+  tintBlob(COL[c.colour]||c.colour);
+  $('open').style.setProperty('--tint',COL[c.colour]||c.colour||'#7b3fe4');
+  const L=$('cards');
+  // waveforms in the crate's own colour: peaks = the crate colour, bass = a deeper shade of it (pastel, so orange gets baby blue)
+  const waveCol=waveColOf(c.colour);
+  L.replaceChildren(...sortTracks(c.tracks.filter(t=>!pend.has(t.id))).map(t=>{
+    const pb=el('button',{type:'button',className:'ib',innerHTML:ICON.play,ariaLabel:'Preview '+t.title});
+    const bar=t.missing?null:seekBar();if(bar)player('c:'+t.id,t.id,pb,bar,null,null,null,{title:t.title,artist:t.artist,from:c.name,wave:'/set/wave?mini=1&id='+encodeURIComponent(t.id)});
+    const rm=el('button',{type:'button',className:'ib del',innerHTML:ICON.x,ariaLabel:'Take '+t.title+' out of this crate',title:'Take out of crate'});
+    rm.onclick=()=>removeLater(c.id,t,card);
+    const away=t.missing&&!!(window.wfDrive&&window.wfDrive.offline);   /* whole music folder away: the notice under the nav says so, the saved numbers stay */
+    const chips=t.missing&&!(away&&t.analysed)?[el('span',{className:'chip c-na',textContent:away?'Not analysed yet':'File not found'})]:t.analysed?[el('span',{className:'chip c-bpm',textContent:t.bpm.toFixed(1)+' BPM'}),t.key?el('span',{className:'chip c-key',textContent:t.key}):el('span',{className:'c-key'}),t.energy!=null?el('span',{className:'chip c-en',textContent:'Energy '+Math.round(t.energy)}):el('span',{className:'c-en'})]:[el('span',{className:'chip c-na',textContent:'Not analysed yet'})];
+    const wv=t.missing?el('span',{className:'wv-none'}):MiniWave.make(t.id,f=>crateSeek(t,pb,f),waveCol);
+    const flipBtn=t.art?el('button',{type:'button',className:'ib flip',innerHTML:'<svg viewBox="0 0 16 16"><rect x="2" y="2.5" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.7" cy="6" r="1.1" fill="currentColor"/><path d="M2.5 12l3.6-3.4 2.4 2.2 2-1.8L13.5 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',ariaLabel:'Show album art',title:'Show album art'}):null;
+    const card=el('li',Object.assign({className:'vcard glass'+(t.missing?' missing':'')+(away?' away':'')+(pending?' pending':'')+(TILE_ART_BG&&t.art?' artbg':'')},t.art?{style:'--art:url(/art/'+t.art+'.jpg)'}:{}),
+      el('div',Object.assign({className:'disc'+(t.art?' hasart':''),ariaHidden:'true'},t.art?{style:'--art:url(/art/'+t.art+'.jpg)'}:{})),
+      el('div',{className:'who'},el('b',{textContent:t.title}),el('span',{textContent:t.artist||'Unknown artist'})),wv,
+      el('div',{className:'row'},el('span',{className:'chips'},...chips),el('span',{className:'sp'}),t.missing?null:pb,t.art?flipBtn:null),bar,rm,
+      el('span',{className:'tags'},...(['Traxsource','Discogs (release styles)'].includes(t.style_source)?t.styles||[]:[]).map(s=>el('span',{className:'tag',title:s+' · '+t.style_source},s))));
+    card.style.setProperty('--c',COL[c.colour]||c.colour);card.dataset.id=t.id;card.draggable=true;card.title='';
+    if(flipBtn){flipBtn.onclick=e=>{e.stopPropagation();flipCard(card,!card.classList.contains('showart'))};
+      card.addEventListener('pointerdown',e=>{card._touch=e.pointerType==='touch'});
+      // mouse off the tile: back to normal. A leave DURING the turn is ignored: the tile is edge-on then, so the browser says the mouse left even
+      // though it didn't (that was flipping it straight back). flipCard() checks for real once the turn is over.
+      card.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!card._turning)flipCard(card,false)})}
+    return card}));
+  return [...L.children]}
+
+/* Tile flip: the album art with nothing over it. Turn the tile edge-on, swap the face, turn it back. 'want' is where the tile should end up,
+   so a mouse-off in the middle of the turn still lands on the right face. Touch has no mouse-off: it flips back after 6 s or on the next tap. */
+function flipCard(card,to){card._want=to;clearTimeout(card._auto);clearTimeout(card._check);
+  if(card._turning||card.classList.contains('showart')===to)return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){card.classList.toggle('showart',to);return}
+  card._turning=true;const T='transform .15s ease-in';
+  card.style.transition=T;card.style.transform='perspective(900px) rotateY(90deg)';
+  setTimeout(()=>{card.classList.toggle('showart',card._want);
+    card.style.transition='none';card.style.transform='perspective(900px) rotateY(-90deg)';void card.offsetWidth;
+    card.style.transition='transform .15s ease-out';card.style.transform='perspective(900px) rotateY(0deg)';
+    setTimeout(()=>{card.style.transition='';card.style.transform='';card._turning=false;
+      if(card.classList.contains('showart')!==card._want)flipCard(card,card._want);
+      else if(card._want){
+        // turn over: is the mouse really off the tile? (give the browser a moment to refresh :hover after the transform is cleared)
+        card._check=setTimeout(()=>{if(card._want&&!card._turning&&!card._touch&&!card.matches(':hover'))flipCard(card,false)},220);
+        card._auto=setTimeout(()=>{if(card._want&&(card._touch||!card.matches(':hover')))flipCard(card,false)},6000)}},160)},150)}
+
+/* drag a card (tile or list view) to reorder the crate: the card moves live, the order is saved on drop and becomes the crate's own order */
+(function(){const L=$('cards');let drag=null,committed=false,start=[],nd=false;
+  L.addEventListener('pointerdown',e=>{nd=!!e.target.closest('.wv,button,a,input,.pbar')});   // scrubbing the waveform / pressing a button must not start a drag
+  L.addEventListener('dragstart',e=>{const li=e.target.closest&&e.target.closest('.vcard');if(!li||nd||li.parentNode!==L){e.preventDefault();return}
+    drag=li;committed=false;start=[...L.children];e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',li.dataset.id);
+    requestAnimationFrame(()=>li.classList.add('dragging'))});
+  L.addEventListener('dragover',e=>{if(!drag)return;e.preventDefault();e.dataTransfer.dropEffect='move';
+    const t=e.target.closest&&e.target.closest('.vcard');if(!t||t===drag||t.hidden||t.parentNode!==L)return;
+    const r=t.getBoundingClientRect(),before=L.classList.contains('list')?e.clientY<r.top+r.height/2:e.clientX<r.left+r.width/2;
+    if(before?drag.nextSibling!==t:t.nextSibling!==drag){if(before)L.insertBefore(drag,t);else t.after(drag)}});
+  L.addEventListener('drop',e=>{if(drag){e.preventDefault();committed=true}});
+  L.addEventListener('dragend',()=>{if(!drag)return;const li=drag;drag=null;li.classList.remove('dragging');
+    const ids=[...L.children].filter(x=>!x.hidden&&x.dataset.id).map(x=>x.dataset.id),was=start.filter(x=>!x.hidden&&x.dataset.id).map(x=>x.dataset.id);
+    if(!committed||ids.join()===was.join()){if(!committed)L.replaceChildren(...start);return}
+    const c=data.crates.find(x=>x.id===cur);if(!c)return;
+    const by=new Map(c.tracks.map(t=>[t.id,t])),inList=new Set(ids);c.tracks=[...ids.map(i=>by.get(i)).filter(Boolean),...c.tracks.filter(t=>!inList.has(t.id))];
+    if(csort.k){csort={k:null,d:1};try{localStorage.setItem('wf.cratesort',JSON.stringify(csort))}catch(e){}drawHead()}   // the dropped order is now the crate's order, not a column sort
+    document.dispatchEvent(new CustomEvent('wf-crates',{detail:data}));
+    post('/crates/reorder',{crate:c.id,ids}).catch(()=>{})});
+})();
+/* ✕ fades the card out; the crate only changes after the undo window (or when you leave the page) */
+const pend=new Map();let undoT=0;
+function setCount(){const n=[...$('cards').children].filter(x=>!x.hidden).length;$('ocount').textContent=n+(n===1?' track':' tracks')}
+function commit(id){const p=pend.get(id);if(!p)return;clearTimeout(p.timer);pend.delete(id);post('/crates/edit',{crate:p.crate,remove:id}).then(load)}
+function removeLater(crate,t,card){if(playing&&playing.key==='c:'+t.id)stopP();
+  card.classList.add('gone');setTimeout(()=>{if(card.classList.contains('gone')){card.hidden=true;setCount()}},350);
+  pend.set(t.id,{crate,card,timer:setTimeout(()=>{commit(t.id);if(undoT===t.id)$('undo').hidden=true},6000)});
+  undoT=t.id;$('undotxt').textContent='Took out '+t.title;$('undo').hidden=false;$('undobtn').focus({preventScroll:true})}
+$('undobtn').onclick=()=>{const p=pend.get(undoT);$('undo').hidden=true;if(!p)return;clearTimeout(p.timer);pend.delete(undoT);
+  p.card.hidden=false;setCount();requestAnimationFrame(()=>requestAnimationFrame(()=>p.card.classList.remove('gone')))};
+addEventListener('pagehide',()=>{for(const [id,p] of pend)navigator.sendBeacon('/crates/edit',JSON.stringify({crate:p.crate,remove:id}));pend.clear()});
+/* new crate + add-tracks list (whole library, search + sort, + toggles in/out of the open crate) */
+let libRows=null;
+const PLUS='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  TICK='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+let rbRows=[],rbOn=new Set();
+const rbDraw=()=>{const q=$('rbq').value.trim().toLowerCase(),L=$('rblist');L.textContent='';
+  rbRows.filter(r=>!q||r.name.toLowerCase().includes(q)).forEach(r=>{const li=document.createElement('li'),off=!r.ok;li.className='rbrow'+(off?' off':'');
+    const cb=document.createElement('input');cb.type='checkbox';cb.disabled=off;cb.checked=rbOn.has(r.id);cb.setAttribute('aria-label',r.name);
+    cb.onchange=()=>{cb.checked?rbOn.add(r.id):rbOn.delete(r.id);rbSum()};
+    const b=document.createElement('b');b.textContent=r.name;const n=document.createElement('span');n.className='n';n.textContent=r.ok+' / '+r.total;
+    const d=document.createElement('span');d.className='done';d.textContent=r.imported?'Imported':'';
+    li.append(cb,b,n,d);if(!off)li.onclick=e=>{if(e.target!==cb){cb.checked=!cb.checked;cb.onchange()}};L.append(li)});rbSum()};
+const rbSum=()=>{const u=new Set();rbRows.filter(r=>rbOn.has(r.id)).forEach(r=>r.cids.forEach(c=>u.add(c)));
+  $('rbgo').disabled=!rbOn.size;if(!$('rbgo').dataset.busy)$('rbst').textContent=rbOn.size?rbOn.size+' playlist'+(rbOn.size>1?'s':'')+' · '+u.size+' track'+(u.size===1?'':'s')+' on the drive':'Tick the playlists you want as crates. Files stay on the drive.'};
+$('rbbtn').onclick=async()=>{const p=$('rbpanel');if(!p.hidden){p.hidden=true;return}p.hidden=false;$('rbst').textContent='Reading Rekordbox…';$('rblist').textContent='';
+  try{const r=await fetch('/rb/playlists');rbRows=await r.json();if(!Array.isArray(rbRows))throw 0}catch(e){rbRows=[];$('rbst').textContent='Couldn’t read Rekordbox';return}
+  rbOn=new Set();rbDraw();p.scrollIntoView({behavior:'smooth',block:'nearest'})};
+$('cratesort').value=XSORTS[xsort]?xsort:'manual';$('cratesort').onchange=()=>{xsort=$('cratesort').value;try{localStorage.setItem('wf.cratessort',xsort)}catch(e){}redraw()};
+let cqt=0;$('cratesearch').oninput=()=>{clearTimeout(cqt);cqt=setTimeout(()=>{cq=$('cratesearch').value.trim().toLowerCase();redraw()},120)};
+$('rbq').oninput=rbDraw;$('rbclose').onclick=()=>{$('rbpanel').hidden=true};$('rbnone').onclick=()=>{rbOn.clear();rbDraw()};
+$('rball').onclick=()=>{const q=$('rbq').value.trim().toLowerCase();rbRows.filter(r=>r.ok&&(!q||r.name.toLowerCase().includes(q))).forEach(r=>rbOn.add(r.id));rbDraw()};
+$('rbgo').onclick=async()=>{const ids=[...rbOn];if(!ids.length)return;$('rbgo').disabled=true;$('rbgo').dataset.busy='1';$('rbst').textContent='Importing…';
+  try{const r=await post('/rb/import',{ids});if(r.error)throw new Error(r.error);
+    rbRows.forEach(x=>{if(rbOn.has(x.id))x.imported=true});rbOn.clear();delete $('rbgo').dataset.busy;await load();rbDraw();
+    $('rbst').textContent=r.crates.length+' crate'+(r.crates.length===1?'':'s')+' made · '+r.linked+' new track'+(r.linked===1?'':'s')+' linked'+(r.skipped?' · '+r.skipped+' not on the drive':'');
+    if(window.wfAnalyse)wfAnalyse.check()}
+  catch(e){delete $('rbgo').dataset.busy;$('rbst').textContent='Import failed: '+e.message;$('rbgo').disabled=!rbOn.size}};
+$('m3ubtn').onclick=()=>$('m3ufile').click();
+$('m3ufile').onchange=async()=>{const f=$('m3ufile').files[0];$('m3ufile').value='';if(!f)return;
+  try{const r=await post('/crates/import_m3u',{name:f.name.replace(/\.[^.]+$/,''),text:await f.text()});if(r.error)throw new Error(r.error+(r.total?' ('+r.total+' in the file)':''));
+    $('newform').hidden=true;$('newcrate').hidden=false;$('rbpanel').hidden=true;await load();await openCrate(r.id);
+    const m=r.total-r.matched;ctoast(r.name+': '+r.matched+' of '+r.total+' tracks'+(m>0?' · '+m+' not in your Library'+(r.missing&&r.missing.length?': '+r.missing.slice(0,3).join(', ')+(r.missing.length>3?'…':''):''):''),async()=>{await post('/crates/edit',{crate:r.id,delete:true});await load()},m>0?14000:9000)}
+  catch(e){ctoast('Couldn’t import: '+e.message,null,9000)}};
+$('newcrate').onclick=()=>{$('newcrate').hidden=true;$('newform').hidden=false;$('newname').value='';$('newname').focus()};
+$('newcancel').onclick=()=>{$('newform').hidden=true;$('newcrate').hidden=false;$('rbpanel').hidden=true};
+$('newform').onsubmit=async e=>{e.preventDefault();const n=$('newname').value.trim();if(!n){$('newname').focus();return}
+  const c=await post('/crates/new',{name:n});$('newform').hidden=true;$('newcrate').hidden=false;$('rbpanel').hidden=true;if(cq){cq='';$('cratesearch').value=''}await load();await openCrate(c.id);showAdder()};
+const camN=k=>{const m=/^(\d+)([AB])$/.exec(k||'');return m?(+m[1])*2+(m[2]==='B'?1:0):999};
+const SORT={new:(a,b)=>b.added-a.added,artist:(a,b)=>(a.artist||'~').localeCompare(b.artist||'~')||a.title.localeCompare(b.title),title:(a,b)=>a.title.localeCompare(b.title),
+  bpmup:(a,b)=>(a.bpm||999)-(b.bpm||999),bpmdown:(a,b)=>(b.bpm||0)-(a.bpm||0),key:(a,b)=>camN(a.key)-camN(b.key),energy:(a,b)=>(b.energy||0)-(a.energy||0)};
+async function showAdder(){$('adder').hidden=false;$('oadd').hidden=true;if(!libRows)libRows=await fetch('/crates/library').then(r=>r.json());drawAdder();
+  $('adder').scrollIntoView({behavior:'smooth',block:'nearest'});$('adq').focus({preventScroll:true})}
+function hideAdder(){$('adder').hidden=true;$('oadd').hidden=false;if(playing&&playing.key.startsWith('a:'))stopP()}
+$('oadd').onclick=showAdder;$('addone').onclick=()=>{hideAdder();$('obody').scrollTo({top:0,behavior:'smooth'})};
+$('adq').oninput=()=>drawAdder();$('adsort').onchange=()=>drawAdder();
+function drawAdder(){if($('adder').hidden||!libRows)return;const c=data.crates.find(x=>x.id===cur);if(!c)return;
+  const inC=new Set(c.tracks.map(t=>t.id).filter(id=>!pend.has(id))),q=$('adq').value.trim().toLowerCase();
+  const rows=libRows.filter(t=>!q||(t.title+' '+t.artist).toLowerCase().includes(q)).sort(SORT[$('adsort').value]||SORT.new);
+  const L=$('adlist'),wcol=waveColOf(c.colour);
+  if(!rows.length){L.replaceChildren(el('li',{className:'adnone',textContent:'No tracks match.'}));return}
+  L.replaceChildren(...rows.map(t=>{const on=inC.has(t.id);
+    const b=el('button',{type:'button',className:'addbtn',innerHTML:on?TICK:PLUS,ariaLabel:(on?'Take ':'Add ')+t.title+(on?' out of ':' to ')+c.name});b.setAttribute('aria-pressed',on);
+    b.onclick=async()=>{b.disabled=true;if(!on&&pend.has(t.id)){const p=pend.get(t.id);clearTimeout(p.timer);pend.delete(t.id);if(undoT===t.id)$('undo').hidden=true;await load();drawAdder();return}
+      await post('/crates/edit',on?{crate:c.id,remove:t.id}:{crate:c.id,add:t.id});await load();drawAdder();
+      const nb=[...$('adlist').querySelectorAll('.addbtn')].find(x=>x.ariaLabel&&x.ariaLabel.includes(t.title));if(nb)nb.focus({preventScroll:true})};
+    const pb=el('button',{type:'button',className:'ib',innerHTML:ICON.play,ariaLabel:'Preview '+t.title}),key='a:'+t.id;
+    const wv=MiniWave.make(t.id,f=>crateSeek(t,pb,f,key),wcol);   // always-visible waveform: click or drag to play from that spot
+    const me=player(key,t.id,pb,seekBar(),null,null,null,{title:t.title,artist:t.artist,from:c.name,wave:'/set/wave?mini=1&id='+encodeURIComponent(t.id)});me.wv=wv;
+    return el('li',{className:'adrow'},pb,el('div',{className:'who'},el('b',{textContent:t.title}),el('span',{textContent:t.artist||'Unknown artist'})),
+      el('div',{className:'scell'},wv),el('div',{className:'row'},...(t.bpm?[el('span',{className:'chip',textContent:t.bpm.toFixed(1)+' BPM'}),t.key?el('span',{className:'chip',textContent:t.key}):null,t.energy!=null?el('span',{className:'chip',textContent:'Energy '+Math.round(t.energy)}):null]:[el('span',{className:'chip',textContent:'Not analysed yet'})]).filter(Boolean)),b)}))}
+/* the open crate's count blob takes the crate's OWN colour (light / mid / dark shades, same on every crate). Text is ALWAYS white (user rule). */
+function tintBlob(hex){const m=/^#?([0-9a-f]{6})$/i.exec(hex||'');if(!m)return;const n=parseInt(m[1],16),c=[n>>16&255,n>>8&255,n&255];
+  const mix=(t,k)=>'rgb('+c.map(v=>Math.round(v+(t-v)*k)).join(',')+')',b=$('oblob');
+  b.style.setProperty('--blob-a',mix(255,.55));b.style.setProperty('--blob-b',mix(0,0));b.style.setProperty('--blob-c',mix(0,.35));
+  b.style.color='#fff'}
+const calm=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+let closing=false;
+function fromCrate(id){   // translate+scale that puts the sheet over its crate
+  const p=$('open').getBoundingClientRect(),r=scene&&scene.rectOf&&scene.rectOf(id);
+  const cx=r?r.left+r.width/2:innerWidth/2,cy=r?r.top+r.height*.4:innerHeight/2;
+  return 'translate('+(cx-(p.left+p.width/2)).toFixed(1)+'px,'+(cy-(p.top+p.height/2)).toFixed(1)+'px) scale(.12)'}
+async function openCrate(id){const c=data.crates.find(x=>x.id===id);if(!c)return;
+  const again=cur===id&&!$('open').hidden;if(!again){hideAdder();stopP()}cur=id;
+  const panel=$('open'),scrim=$('scrim'),fresh=panel.hidden;panel.hidden=false;scrim.hidden=false;
+  const cards=drawCards(c,!!scene&&!again);$('obody').scrollTop=0;
+  let go=null;
+  if(fresh&&!calm()){const from=fromCrate(id);
+    scrim.animate([{opacity:0},{opacity:1}],{duration:300,easing:'ease-out'});
+    // the sheet is drawn once at its start pose before it moves: that first draw of the big glass sheet costs the GPU
+    // ~100 ms, and it used to land in the middle of the zoom and the record flight as a jump
+    const a=panel.animate([{transform:from,opacity:.001},{opacity:1,offset:.3},{transform:'none',opacity:1}],{duration:560,easing:'cubic-bezier(.2,.85,.25,1)'});
+    a.pause();go=new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>{if(a.playState==='paused')a.play();r()})))}
+  if(go)await go;
+  if(cur!==id)return;   // closed (or another crate opened) while the sheet was being drawn
+  if(scene&&!again){const done=()=>cards.forEach(x=>x.classList.remove('pending'));
+    try{await Promise.race([scene.flyOut(id,cards,$('obody')),new Promise(r=>setTimeout(r,5000))])}catch(e){}done()}}
+function closeCrate(){cur=null;$('cpop').hidden=true;$('open').getAnimations().forEach(a=>{a.onfinish=a.oncancel=null;a.cancel()});$('scrim').getAnimations().forEach(a=>a.cancel());$('open').hidden=true;$('scrim').hidden=true;closing=false;hideAdder();stopP();if(scene&&scene.close)scene.close()}
+function dismiss(){const p=$('open');if(p.hidden||closing)return;
+  if(calm()){closeCrate();return}
+  closing=true;$('scrim').animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'});
+  const a=p.animate([{transform:'none',opacity:1},{transform:fromCrate(cur),opacity:0}],{duration:260,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'});
+  a.onfinish=a.oncancel=closeCrate}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('open').hidden&&!/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))dismiss()});
+new ResizeObserver(()=>{const b=$('obody');$('crhead').style.marginRight=(b.offsetWidth-b.clientWidth)+'px'}).observe($('obody'));   // header as wide as the list, whatever the scrollbar takes
+$('scrim').onclick=dismiss;$('scrim').onwheel=e=>e.preventDefault();
+$('oclose').onclick=dismiss;
+const SWATCH=['#7b3fe4','#8ec5f0','#79b47e','#ff5fa8','#ffb23d','#c6ff3d','#ff7a2e','#1fb5a8','#e8364a','#ffe066','#2f5bea','#9df2c8','#ff8a7a','#b9a3ff','#2e7d4f','#ffc2dc','#24306e','#d9f99d','#8b5a3c','#f2f2ee'];
+const hex6=c=>{c=COL[c]||c||'';return /^#[0-9a-f]{6}$/i.test(c)?c.toLowerCase():'#7b3fe4'};
+async function recolour(c){const cr=data.crates.find(x=>x.id===cur);if(!cr)return;c=c.toLowerCase();if(hex6(cr.colour)===c)return;
+  await post('/crates/edit',{crate:cur,colour:c});await load();drawCpop()}
+function drawCpop(){const cr=data.crates.find(x=>x.id===cur),P=$('cpop');if(!cr){P.hidden=true;return}const now=hex6(cr.colour);
+  const sw=el('div',{className:'sw'},...SWATCH.map(c=>{const b=el('button',{type:'button',title:c,ariaLabel:'Colour '+c});b.style.background=c;if(c===now)b.classList.add('on');b.onclick=()=>recolour(c);return b}));
+  const pick=el('input',{type:'color',value:now,ariaLabel:'Custom colour'});pick.onchange=()=>recolour(pick.value);
+  P.replaceChildren(sw,el('label',{},pick,'Custom'))}
+$('ocolour').onclick=()=>{const P=$('cpop');if(!P.hidden){P.hidden=true;$('ocolour').setAttribute('aria-expanded','false');return}drawCpop();P.hidden=false;const r=$('ocolour').getBoundingClientRect();P.style.top=(r.bottom+10)+'px';P.style.right=Math.max(12,innerWidth-r.right-4)+'px';$('ocolour').setAttribute('aria-expanded','true')};
+document.addEventListener('pointerdown',e=>{const P=$('cpop');if(!P.hidden&&!P.contains(e.target)&&e.target!==$('ocolour')){P.hidden=true;$('ocolour').setAttribute('aria-expanded','false')}});
+$('oname').onclick=()=>{const h=$('oname'),c=data.crates.find(x=>x.id===cur);if(!c||h.querySelector('input'))return;
+  const i=el('input',{value:c.name,maxLength:60,ariaLabel:'Crate name'});h.replaceChildren(i);i.select();let finished=false;
+  const fin=async ok=>{if(finished)return;finished=true;const name=i.value.trim();h.textContent=c.name;
+    if(ok&&name&&name!==c.name){try{const r=await fetch('/crates/edit',{method:'POST',body:JSON.stringify({crate:c.id,name})});
+      if(!r.ok||!await r.json())throw new Error('Rename failed');await load()}
+      catch(e){alert('Could not rename this crate. Please try again.')}}};
+  i.onkeydown=e=>{if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();fin(e.key==='Enter');h.focus()}};i.onblur=()=>fin(true)};
+$('oname').onkeydown=e=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();$('oname').click()}};
+$('odelete').onclick=async()=>{const b=$('odelete');if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Sure?';setTimeout(()=>{b.dataset.sure='';b.textContent='Delete'},2500);return}
+  await post('/crates/edit',{crate:cur,delete:true});closeCrate();load()};
+
+
+/* Analysis control and progress are owned by the inline wf-analysis-controller. */
+
+/* ---- side by side: open 2-4 crates at once and move tracks between them (drag, or select then "Move N here") ---- */
+let cmpIds=[],cmpQ={},cmpLast={},dragFrom=null,toastT=0;const cmpSel=new Map();
+const songK=t=>((t.artist||'')+' - '+(t.title||'')).toLowerCase().trim();
+const pickSet=new Set();
+function drawPick(){const f=$('cmpq').value.trim().toLowerCase();
+  $('cmpchips').replaceChildren(...data.crates.filter(c=>!f||c.name.toLowerCase().includes(f)||pickSet.has(c.id)).map(c=>{
+    const b=el('button',{type:'button',className:'chip'},el('i'),c.name+' · '+c.tracks.length);b.firstChild.style.background=hex6(c.colour);
+    b.setAttribute('aria-pressed',String(pickSet.has(c.id)));
+    b.onclick=()=>{if(pickSet.has(c.id))pickSet.delete(c.id);else if(pickSet.size<4)pickSet.add(c.id);drawPick()};return b}));
+  const n=pickSet.size;$('cmpgo').disabled=n<2;$('cmpgo').textContent=n<2?'Pick 2 to 4':'Open '+n}
+$('cmpbtn').onclick=()=>{const P=$('cmppick');P.hidden=!P.hidden;if(!P.hidden){for(const id of [...pickSet])if(!data.crates.some(c=>c.id===id))pickSet.delete(id);drawPick();$('cmpq').focus()}};
+$('cmpq').oninput=drawPick;
+$('cmpcancel').onclick=()=>{$('cmppick').hidden=true};
+$('cmpgo').onclick=()=>{$('cmppick').hidden=true;openCmp([...pickSet])};
+function openCmp(ids){closeCrate();for(const id of [...pend.keys()])commit(id);   // any removal still waiting goes through first
+  cmpIds=ids;cmpSel.clear();ids.forEach(i=>cmpSel.set(i,new Set()));cmpQ={};cmpLast={};
+  $('cmp').hidden=false;document.documentElement.style.overflow='hidden';drawCmp()}
+function closeCmp(){$('cmp').hidden=true;$('ctoast').hidden=true;document.documentElement.style.overflow='';load()}
+async function refreshCmp(){data=await fetch('/crates/data').then(r=>r.json());drawCmp()}
+function updMoves(){document.querySelectorAll('#cmpcols .ccol').forEach(col=>{const box=col.querySelector('.mvs');const to=col.dataset.id;
+  box.replaceChildren(...[...cmpSel].filter(([id,s])=>id!==to&&s.size).map(([from,s])=>{const src=data.crates.find(c=>c.id===from);
+    const b=el('button',{className:'ghost lime mv',type:'button',title:'From '+(src?src.name:'')},'Move '+s.size+' here');
+    b.onclick=()=>moveTracks(from,to,[...s],false);return b}))})}
+function drawCmp(){const cols=cmpIds.map(id=>data.crates.find(c=>c.id===id)).filter(Boolean);if(cols.length<2){closeCmp();return}
+  const keep={};document.querySelectorAll('#cmpcols .ccol').forEach(c=>keep[c.dataset.id]=c.querySelector('.clist').scrollTop);
+  const seen=new Map();cols.forEach(c=>new Set(c.tracks.map(songK)).forEach(k=>seen.set(k,(seen.get(k)||0)+1)));
+  const box=$('cmpcols');box.style.setProperty('--n',cols.length);box.replaceChildren(...cols.map(c=>drawCol(c,seen)));
+  box.querySelectorAll('.ccol').forEach(c=>{if(keep[c.dataset.id])c.querySelector('.clist').scrollTop=keep[c.dataset.id]});updMoves()}
+function drawCol(c,seen){const sel=cmpSel.get(c.id)||new Set();cmpSel.set(c.id,sel);const wcol=waveColOf(c.colour);
+  for(const id of [...sel])if(!c.tracks.some(t=>t.id===id))sel.delete(id);
+  const col=el('section',{className:'ccol'});col.style.setProperty('--c',hex6(c.colour));col.dataset.id=c.id;
+  const q=el('input',{type:'search',className:'cq',placeholder:'Filter',value:cmpQ[c.id]||''});q.setAttribute('aria-label','Filter '+c.name);
+  const list=el('ol',{className:'clist'});
+  col.append(el('div',{className:'chead'},el('h3',{},c.name),el('small',{},c.tracks.length+(c.tracks.length===1?' track':' tracks')),el('span',{className:'mvs'}),q),list);
+  const rows=()=>{const f=(cmpQ[c.id]||'').toLowerCase(),ts=c.tracks.filter(t=>!f||songK(t).includes(f));
+    list.replaceChildren(...ts.map((t,ix)=>{
+      const key='s:'+c.id+':'+t.id,pb=t.missing?el('span'):el('button',{type:'button',className:'ib',innerHTML:ICON.play,ariaLabel:'Preview '+(t.title||'')});
+      const wv=t.missing?el('span',{className:'wv-none'}):MiniWave.make(t.id,f=>crateSeek(t,pb,f,key),wcol);
+      const li=el('li',{className:'crow'+(sel.has(t.id)?' sel':'')+(t.missing?' miss':''),tabIndex:0,draggable:true},pb,
+        el('div',{title:(t.title||'Unknown track')+(t.artist?' · '+t.artist:'')},el('b',{},t.title||'Unknown track'),el('span',{className:'a'},t.artist||'')),wv,
+        el('span',{className:'m'},[t.bpm?Math.round(t.bpm):'',t.key||''].filter(Boolean).join(' · ')),
+        seen.get(songK(t))>1?el('i',{className:'both',title:'Also in another open crate'}):el('i'));
+      li.setAttribute('aria-selected',String(sel.has(t.id)));
+      if(!t.missing){const me=player(key,t.id,pb,seekBar(),null,null,null,{title:t.title,artist:t.artist,from:c.name,wave:'/set/wave?mini=1&id='+encodeURIComponent(t.id)});me.wv=wv;
+        pb.addEventListener('click',e=>e.stopPropagation());pb.addEventListener('keydown',e=>e.stopPropagation());   // play, don't select
+        wv.addEventListener('pointerdown',()=>{li.draggable=false;addEventListener('pointerup',()=>{li.draggable=true},{once:true})})}   // scrubbing mustn't start a row drag
+      const toggle=on=>{on?sel.add(t.id):sel.delete(t.id);li.classList.toggle('sel',on);li.setAttribute('aria-selected',String(on))};
+      li.onclick=e=>{const last=cmpLast[c.id],a=last==null?-1:ts.findIndex(x=>x.id===last);
+        if(e.shiftKey&&a>=0){for(let k=Math.min(a,ix);k<=Math.max(a,ix);k++){sel.add(ts[k].id)}rows()}else toggle(!sel.has(t.id));
+        cmpLast[c.id]=t.id;updMoves()};
+      li.onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();li.click()}};
+      li.ondragstart=e=>{if(!sel.has(t.id)){sel.clear();list.querySelectorAll('.sel').forEach(x=>{x.classList.remove('sel');x.setAttribute('aria-selected','false')});toggle(true);updMoves()}
+        dragFrom=c.id;e.dataTransfer.effectAllowed='copyMove';e.dataTransfer.setData('text/plain',sel.size+' tracks')};
+      li.ondragend=()=>{dragFrom=null;document.querySelectorAll('.ccol.over').forEach(x=>x.classList.remove('over'))};
+      return li}))};
+  q.oninput=()=>{cmpQ[c.id]=q.value;rows()};
+  col.ondragover=e=>{if(!dragFrom||dragFrom===c.id)return;e.preventDefault();e.dataTransfer.dropEffect=e.altKey?'copy':'move';col.classList.add('over')};
+  col.ondragleave=e=>{if(!col.contains(e.relatedTarget))col.classList.remove('over')};
+  col.ondrop=e=>{e.preventDefault();col.classList.remove('over');const from=dragFrom;dragFrom=null;
+    if(from&&from!==c.id)moveTracks(from,c.id,[...(cmpSel.get(from)||[])],e.altKey)};   // hold Option/Alt to copy instead of move
+  rows();return col}
+async function moveTracks(from,to,ids,copy){if(!ids.length||from===to)return;
+  const r=await post('/crates/move',{from,to,ids,copy});(cmpSel.get(from)||new Set()).clear();await refreshCmp();
+  const moved=r.moved||[],already=r.already||[],dst=data.crates.find(c=>c.id===to);
+  const dn=dst?dst.name:'crate';
+  ctoast([moved.length?(copy?'Copied ':'Moved ')+moved.length+' to '+dn:'',already.length?already.length+' already in '+dn:''].filter(Boolean).join(' · '),async()=>{
+    if(copy){for(const id of moved)await post('/crates/edit',{crate:to,remove:id})}
+    else{if(moved.length)await post('/crates/move',{from:to,to:from,ids:moved});for(const id of already)await post('/crates/edit',{crate:from,add:id})}
+    await refreshCmp()})}
+/* Tile view: the album cover fills the whole tile behind a dark fade (readability). ROLLBACK: set TILE_ART_BG=false (or restore tools/ref/crates.before-tile-art-bg-2026-11-08.html). */
+const TILE_ART_BG=true;
+function ctoast(msg,undo,ms){const T=$('ctoast');$('ctmsg').textContent=msg;T.hidden=false;clearTimeout(toastT);
+  $('ctundo').hidden=!undo;$('ctundo').onclick=async()=>{T.hidden=true;clearTimeout(toastT);await undo()};toastT=setTimeout(()=>T.hidden=true,ms||7000)}
+/* XML fallback: a crate as a Rekordbox XML + M3U8 (also what the Windows PC uses, where the CDJ export tool isn't installed) */
+let exporting=false;
+async function exportXml(arg){const ids=(Array.isArray(arg)?arg:[arg]).filter(id=>data.crates.find(x=>x.id===id));if(!ids.length||exporting)return;exporting=true;
+  const b=$('oexport'),t=b.textContent;b.disabled=true;b.textContent='Exporting…';
+  try{let n=0,tr=0,off=0,last=null;const bad=[];   // one XML + M3U8 per crate, every crate you ticked
+    for(const id of ids){const nm=data.crates.find(x=>x.id===id).name;
+      const r=await fetch('/crates/export',{method:'POST',body:JSON.stringify({crate:id})}).then(r=>r.json());
+      if(r.error)bad.push(nm+': '+r.error);else{n++;tr+=r.count;off+=r.offline||0;last=r}}
+    if(!n)ctoast('Could not export: '+bad.join('; '),null,9000);
+    else ctoast('Exported '+(n===1?'':n+' crates, ')+tr+(tr===1?' track':' tracks')+' — '+last.xml.split('/').slice(-3).join('/').replace(/[^/]*$/,n>1?'(one file per crate)':last.xml.split('/').pop())+(last.usb?' (on your stick)':' (on this laptop)')
+      +(off?' · '+off+' tracks offline right now (listed by path)':'')+(bad.length?' · NOT exported: '+bad.join('; '):'')+'. In Rekordbox: File → Import → Import Collection, then drag the playlist in.',null,14000)}
+  catch(e){ctoast('Could not export: the server did not answer',null,9000)}
+  b.disabled=false;b.textContent=t;exporting=false}
+/* CDJ export: picked crates -> a Pioneer-ready stick (no Rekordbox). Dialog = stick picker + crate checklist + live progress. */
+let cdjInfo=null;const cdjGet=async()=>{try{cdjInfo=await fetch('/cdj/info').then(r=>r.json())}catch(e){cdjInfo={available:false,sticks:[]}}return cdjInfo};
+const gb=n=>n>=2**30?(n/2**30).toFixed(1)+' GB':Math.round(n/2**20)+' MB';
+let cdjPoll=0;
+function cdjClose(){$('cdj').hidden=true;$('cdjscrim').hidden=true;clearTimeout(cdjPoll)}
+$('cdjx').onclick=cdjClose;$('cdjscrim').onclick=cdjClose;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('cdj').hidden){e.stopPropagation();cdjClose()}},true);
+async function exportCrate(id,more){const info=await cdjGet();if(!info.available){if(id)return exportXml(id);ctoast('The CDJ export is only set up on the Mac. Right-click a crate for the Rekordbox XML file instead.',null,9000);return}
+  $('cdj').hidden=false;$('cdjscrim').hidden=false;drawCdj(info,new Set(more||[id]),null)}
+async function drawCdj(info,pick,vol,confirm){const B=$('cdjbody');window.cdjAside=false;
+  const sticks=info.sticks;if(!vol||!sticks.some(s=>s.name===vol))vol=(sticks.find(s=>s.ours)||sticks.find(s=>!s.rekordbox)||sticks[0]||{}).name||null;
+  const st=sticks.find(s=>s.name===vol);
+  const sl=sticks.length?sticks.map(s=>{const r=el('input',{type:'radio',name:'cdjstick',checked:s.name===vol});r.onchange=()=>drawCdj(info,pick,s.name,false);
+      return el('label',{className:'opt'},r,el('span',{className:'nm',textContent:s.name}),
+        el('small',{textContent:s.fs+' · '+gb(s.free)+' free'}))}):[el('p',{className:'note',textContent:'No USB found. Plug one in, then press Refresh.'})];
+  const cl=data.crates.map(c=>{const k=el('input',{type:'checkbox',checked:pick.has(c.id)});k.onchange=()=>{k.checked?pick.add(c.id):pick.delete(c.id);upd()};
+    return el('label',{className:'opt'},k,el('span',{className:'nm',textContent:c.name}),el('small',{textContent:c.tracks.length+(c.tracks.length===1?' track':' tracks')}))});
+  const boxes=()=>[...document.querySelectorAll('#cdjbody .clist .opt')];
+  const fq=el('input',{type:'search',placeholder:'Filter crates',ariaLabel:'Filter crates',autocomplete:'off'});
+  fq.oninput=()=>{const q=fq.value.trim().toLowerCase();boxes().forEach(l=>{l.hidden=!!q&&!l.querySelector('.nm').textContent.toLowerCase().includes(q)})};
+  const setAll=on=>{boxes().filter(l=>!l.hidden).forEach(l=>{const k=l.querySelector('input'),c=data.crates[boxes().indexOf(l)];if(k.checked!==on){k.checked=on;on?pick.add(c.id):pick.delete(c.id)}});upd()};
+  const all=el('button',{type:'button',className:'linkb',textContent:'Select all',onclick:()=>setAll(true)}),none=el('button',{type:'button',className:'linkb',textContent:'None',onclick:()=>setAll(false)});
+  const warn=null;
+  const go=el('button',{type:'button',className:'go',textContent:'Export'}),ref=el('button',{type:'button',className:'ghost',textContent:'Refresh USB'}),xml=el('button',{type:'button',className:'linkb',textContent:'Rekordbox XML file instead'});
+  const out=el('div');
+  const pv=el('p',{className:'note'});let pvT=0;
+  const showPv=()=>{clearTimeout(pvT);if(!st||!pick.size){pv.textContent='';return}pvT=setTimeout(async()=>{try{const r=await fetch('/cdj/preview?volume='+encodeURIComponent(vol)+'&crates='+[...pick].join(',')).then(r=>r.json());
+    pv.textContent=r.already?(r.new?'Only '+r.new+' new song'+(r.new===1?'':'s')+' will be copied'+(r.copy_mb?' (about '+r.copy_mb+' MB)':'')+'; '+r.already+' already on the stick.':'Nothing new: all '+r.already+' songs are already on the stick.'):r.new+' song'+(r.new===1?'':'s')+' will be added'+(r.copy_mb?' (about '+r.copy_mb+' MB to copy)':'')+'.'}catch(e){pv.textContent=''}},250)};
+  const upd=()=>{showPv();go.disabled=!(st&&pick.size&&(!warn||confirm));const h=document.getElementById('cdjcount');if(h)h.textContent='2 · Export Crates ('+pick.size+')'};
+  ref.onclick=async()=>{await cdjGet();drawCdj(cdjInfo,pick,vol,confirm)};
+  xml.onclick=()=>{const ids=[...pick];if(ids.length){cdjClose();exportXml(ids)}};
+  go.onclick=async()=>{go.disabled=true;ref.disabled=true;
+    const r=await fetch('/crates/cdj',{method:'POST',body:JSON.stringify({crates:[...pick],volume:vol,confirm:!!window.cdjAside})}).then(r=>r.json());
+    if(r.needs_confirm){window.cdjAside=true;out.replaceChildren(el('div',{className:'bad',textContent:'This stick still has an old Rekordbox library on it. Waxfinder can\'t merge with it, so it will be renamed and kept on the stick (nothing is deleted) and a fresh Waxfinder library built. Press Export again to go ahead.'}));go.disabled=false;ref.disabled=false;return}
+    window.cdjAside=false;
+    if(r.error){out.replaceChildren(el('div',{className:'bad',textContent:r.error}));go.disabled=false;ref.disabled=false;return}
+    if(window.parent!==window){cdjClose();parent.postMessage({wfCdj:'poll'},'*');return}   // inside the shell: the progress pill above the player takes over, so you can carry on working
+    watchCdj(r.id,out)};
+  B.replaceChildren(el('div',{},el('h3',{textContent:'1 · Choose USB'}),...sl),el('div',{},el('h3',{id:'cdjcount',textContent:'2 · Export Crates ('+pick.size+')'}),el('div',{className:'cfilt'},fq,all,none),el('div',{className:'clist'},...cl)),
+    el('p',{className:'note',textContent:'Music already on the chosen stick stays where it is; anything else is copied onto it. Earlier crates on the stick are kept. Waveforms, beat grid and key are worked out by the exporter, so they can differ from Waxfinder\'s own numbers. Not yet tried on a real CDJ — bring your normal stick to the first gig.'}),
+    pv,el('div',{className:'acts'},go,ref,el('span',{className:'sp'}),xml),out);
+  upd()}
+/*wfdev-open*/(()=>{const q=new URLSearchParams(location.search).get("export");if(q)setTimeout(()=>{try{exportCrate(null,[])}catch(e){}},700)})();
+function watchCdj(id,out){const bar=el('i'),line=el('div',{textContent:'Starting…'});out.replaceChildren(line,el('div',{className:'prog'},bar));
+  const tick=async()=>{let j;try{j=await fetch('/cdj/job?id='+id).then(r=>r.json())}catch(e){cdjPoll=setTimeout(tick,1500);return}
+    if(j.state==='running'){line.textContent=(j.stage||'Working')+(j.total?' ('+j.done+' of '+j.total+')':'')+'…';bar.style.transform='scaleX('+(j.total?Math.min(1,j.done/j.total):0)+')';cdjPoll=setTimeout(tick,900);return}
+    if(j.state==='error'){out.replaceChildren(el('div',{className:'bad',textContent:(j.outcome==='verify_failed'?'Written, but not verified: ':'Export failed: ')+(j.error||'unknown error')+(j.backup?' (the stick\'s previous library is in '+j.backup.split('/').pop()+')':'')}));return}
+    const r=j.report||{},w=(r.warnings||[]).length,lo=j.left_out||[];
+    const box=el('div',{className:'done'},'Done: '+(r.new_files==null?'Exported to':r.new_files===0?'No new tracks to copy; playlists updated on':'Copied '+r.new_files+(r.new_files===1?' new track':' new tracks')+' to')+' '+j.stick+'. The stick now has '+r.tracks+' tracks in '+r.playlists+' playlists. '+(j.outcome==='verified'?'Checked OK.':j.outcome==='omissions'?'Passed its check, but some tracks were left out.':'The check result was not recorded.')+(r.bytes_copied?' Copied '+gb(r.bytes_copied)+'.':' Nothing needed copying.')
+      +(w?' '+w+' warnings.':'')+(j.backup?' A copy of the old library is in '+j.backup.split('/').pop()+'.':'')+' Eject the stick in Finder before pulling it out.');
+    if(lo.length){const d=el('details',{className:'leftout'},el('summary',{textContent:lo.length+(lo.length===1?' track was':' tracks were')+' left out — click to see which'}),
+      el('ul',{},...lo.map(x=>el('li',{},el('b',{textContent:x.title}),el('span',{textContent:(x.crate?'in '+x.crate+' · ':'')+x.why})))));box.append(d)}
+    if((r.changes||[]).length){const n=x=>x+(x===1?' track':' tracks');box.append(el('ul',{className:'chg'},...r.changes.map(c=>el('li',{textContent:c.first?c.name+': new playlist, '+n(c.count):c.name+': '+([c.added?n(c.added)+' added':'',c.removed?n(c.removed)+' removed':'',c.moved?'order changed':''].filter(Boolean).join(', ')||'no changes')}))))}
+    out.replaceChildren(box);
+    load()};
+  tick()}
+setTimeout(()=>cdjGet(),4000);   // opening /crates starts the background listening for CDJ export
+window.WaxCrateExport=exportCrate;window.WaxCrateExportMany=ids=>exportCrate(null,ids||[]);
+$('oexport').onclick=()=>{if(cur)exportCrate(cur)};
+/* right-click menu on a crate (3D crates, and the Library rail via window.WaxCrateMenu) */
+function crateMenu(id,e,canOpen){const old=document.getElementById('cmenu');if(old)old.remove();
+  const m=el('div',{id:'cmenu',className:'cmenu glass',role:'menu'});
+  const item=(label,fn)=>{const b=el('button',{type:'button',role:'menuitem',textContent:label});b.onclick=()=>{m.remove();fn()};return b};
+  if(canOpen)m.append(item('Open',()=>openCrate(id)));
+  m.append(item('Export to CDJ stick…',()=>exportCrate(id)));
+  const cr=data.crates.find(x=>x.id===id),nm=cr?cr.name:'this crate',del=el('button',{type:'button',role:'menuitem',className:'danger',textContent:'Delete crate…'});
+  del.onclick=async ev=>{if(del.dataset.sure!=='1'){ev.stopPropagation();del.dataset.sure='1';del.textContent='Sure? Delete “'+(nm.length>22?nm.slice(0,21)+'…':nm)+'”';return}   // second click deletes; tracks stay in your library
+    m.remove();await post('/crates/edit',{crate:id,delete:true});if(cur===id)closeCrate();load()};
+  m.append(el('hr'),del);
+  document.body.append(m);const w=m.offsetWidth,h=m.offsetHeight;
+  m.style.left=Math.max(8,Math.min(e.clientX,innerWidth-w-8))+'px';m.style.top=Math.max(8,Math.min(e.clientY,innerHeight-h-8))+'px';
+  m.querySelector('button').focus({preventScroll:true});
+  const away=ev=>{if(ev.type==='keydown'&&ev.key!=='Escape')return;if(ev.type==='pointerdown'&&m.contains(ev.target))return;m.remove();cleanup()};
+  const cleanup=()=>{document.removeEventListener('pointerdown',away,true);document.removeEventListener('keydown',away,true);removeEventListener('scroll',away,true);removeEventListener('resize',away)};
+  setTimeout(()=>{document.addEventListener('pointerdown',away,true);document.addEventListener('keydown',away,true);addEventListener('scroll',away,true);addEventListener('resize',away)});
+  m.addEventListener('click',cleanup)}
+window.WaxCrateMenu=crateMenu;
+$('cmpclose').onclick=closeCmp;
+document.addEventListener('keydown',e=>{if(e.key!=='Escape'||$('cmp').hidden||/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
+  const any=[...cmpSel.values()].some(s=>s.size);if(any){cmpSel.forEach(s=>s.clear());drawCmp()}else closeCmp()});
+
+document.addEventListener('wf-analysed',()=>load());   // a run just finished: 'Not analysed yet' becomes BPM/key/energy
+{let first=null,loaded=false;try{first=JSON.parse(localStorage.getItem('wf.cratesCache')||'null')}catch(e){}   // last visit's crate list: the boxes draw from it at once, the live list then updates them
+const freshP=load().then(()=>{loaded=true});
+(async()=>{
+  if(first&&Array.isArray(first.crates)){if(!loaded)data=first}else await freshP;
+  try{let m=await window.wfScene3d;
+    if(m instanceof Error||!m||!m.mountCrates){   // the module failed to load (a dropped request): one clean reload gets a fresh module map, then give up to the flat list
+      let again=false;try{again=sessionStorage.getItem('wf.c3retry')!=='1';if(again)sessionStorage.setItem('wf.c3retry','1')}catch(e){}
+      if(again){location.reload();return}throw m}
+    try{sessionStorage.removeItem('wf.c3retry')}catch(e){}
+    const {mountCrates}=m;
+    const st=$('stage');st.classList.remove('flat');st.replaceChildren();
+    scene=mountCrates(st,{crates:shown(),onOpen:openCrate,onReorder:saveOrder,onContext:(id,e)=>crateMenu(id,e,true),mode:cmode});setCMode(cmode);
+  }catch(e){console.warn(e);scene3dFailed=true;await freshP;drawFlat()}
+})()}
+</script>
+<script src="/static/datepicker.js"></script>
+<script src="/static/dialogfocus.js"></script><script src="/static/library.js"></script><script src="/static/toaststack.js"></script>
+<script>(function(){const n=document.querySelector('.nav');const f=()=>n.classList.toggle('stuck',scrollY>40);addEventListener('scroll',f,{passive:true});f()})();</script>
+<script src="/static/lavablobs.js"></script>
+</body>
+</html>

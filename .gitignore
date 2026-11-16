@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.DS_Store
+build/
+dist/
+out/
+# the app's own data, created at run time: never commit
+*.log
+config.json
+history.json
+crates.json
+votes.json
+taste.json

@@ -1,0 +1,82 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Energy tags</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0f3a;--panel:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--ink:#fff;--dim:rgba(255,255,255,.65);--mag:#ff2e88;--lime:#c6ff3d;--amb:#ffb03d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#2a1a7a,transparent),var(--bg);color:var(--ink);font:500 14px/1.4 Archivo,system-ui,sans-serif;padding:32px clamp(16px,4vw,48px) 120px}
+h1{font-weight:900;font-stretch:125%;font-size:clamp(34px,6vw,84px);line-height:.9;letter-spacing:-.03em;text-transform:uppercase;margin:0 0 18px}
+#list{display:grid;gap:8px;max-width:1020px}
+.m{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.m.playing{border-color:var(--mag)}
+.t{min-width:0}.t b,.t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.t b{font-weight:700}.t span{font-size:12px;color:var(--dim)}
+.pl{width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);background:none;color:#fff;display:grid;place-items:center;cursor:pointer}
+.pl svg{width:13px;height:13px}.pl.on{background:var(--mag);border-color:var(--mag)}
+.v{display:flex;align-items:center;gap:4px}
+.v small{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:0 4px}
+.v button{--c:hsl(calc(210 - var(--i) * 24) 90% 66%);width:32px;height:32px;padding:0;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--c) 55%,transparent);background:none;color:#fff;cursor:pointer;font:800 13px Archivo,sans-serif;font-variant-numeric:tabular-nums;transition:background-color .12s,transform .12s}
+.v button:hover{background:color-mix(in srgb,var(--c) 25%,transparent);transform:translateY(-1px)}
+.v button[aria-pressed=true]{background:var(--c);border-color:var(--c);color:#14062e}
+.v button.was:not([aria-pressed=true]){border-style:dashed;border-color:#fff}
+.v button.now{position:relative}.v button.now::after{content:"";position:absolute;left:50%;bottom:-7px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--lime)}
+.v .ok{width:auto;height:32px;padding:0 12px;border-radius:999px;border:1.5px solid var(--lime);color:var(--lime);margin-right:6px;white-space:nowrap;font-size:12px;letter-spacing:.02em}
+.v .ok:hover{background:var(--lime);color:#14062e;transform:none}.v .ok:disabled{opacity:.35;cursor:default}
+.m>.wv{grid-column:2/-1;height:36px;margin-top:-2px}
+.m.done{opacity:.6}.m.done:hover{opacity:1}
+.keys{font-size:12px;color:var(--dim);margin:-6px 0 16px}
+.v button[aria-pressed=true]{color:#14062e}.v .l[aria-pressed=true]{background:#7fd0ff;border-color:#7fd0ff}.v .d[aria-pressed=true]{background:var(--amb);border-color:var(--amb)}.v .p[aria-pressed=true]{background:var(--lime);border-color:var(--lime)}.v .lm[aria-pressed=true]{background:#a6c8ff;border-color:#a6c8ff}.v .hm[aria-pressed=true]{background:#e2e85a;border-color:#e2e85a}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:14px clamp(16px,4vw,48px);background:rgba(8,10,40,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-weight:700}
+#st{font-variant-numeric:tabular-nums;flex:1;min-width:200px}
+.bar button{height:40px;padding:0 20px;border-radius:999px;border:2px solid #fff;background:none;color:#fff;font-weight:800;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.bar button:disabled{opacity:.35;cursor:default}
+@media (max-width:640px){.m>.wv{grid-column:1/-1}.m{grid-template-columns:40px minmax(0,1fr)}.v{grid-column:1/-1}.v button{flex:1;width:auto;min-width:0;height:30px}.v small{display:none}.v{flex-wrap:wrap}.v .ok{flex:1 1 100%;margin:0 0 4px}}
+a.back{display:inline-block;margin:0 0 10px;color:#c6ff3d;font-weight:700;text-decoration:none}a.back:hover{text-decoration:underline}
+</style></head><body>
+<a class="back" href="/crates">&larr; Back to Library</a>
+<h1>Energy</h1>
+<p class="keys">Rate 1 (lowest) to 10 (peak). Click or drag a waveform to play from there. While a track plays, press 1–9 (0 = 10) to rate it, ← / → to skip 10 s. The lime dot and <b>Agree</b> show what the current logic rates it: click Agree (or press Enter while it plays) to keep that. A dashed ring marks an old tag’s spot.</p>
+<div id="list"></div>
+<div class="bar"><span id="st"></span><button type="button" id="mids" hidden>Re-rate old tags</button><button type="button" id="more">More tracks</button><button type="button" id="train" disabled>Train</button></div>
+<script src="/static/player.js"></script><script src="/static/miniwave.js"></script>
+<script>
+const PLAY='<svg viewBox="0 0 16 16"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg>',STOP='<svg viewBox="0 0 16 16"><rect x="4" y="4" width="8" height="8" rx="1.5" fill="currentColor"/></svg>';
+const el=(t,p,...k)=>{const e=document.createElement(t);Object.assign(e,p||{});k.forEach(c=>c!=null&&e.append(c));return e};
+const $=id=>document.getElementById(id), aud=window.WaxPlayer?WaxPlayer.audio({}):new Audio(); let cur=null, S=null, poll=null;
+const pct=x=>Math.round(x*100)+'%';
+function off(){if(!cur)return;if(cur.wv)MiniWave.bar(cur.wv).style.transform='scaleX(0)';cur.b.innerHTML=PLAY;cur.b.classList.remove('on');cur.r.classList.remove('playing');cur=null}
+aud.onended=off;aud.onemptied=off;   // something else (the bar, another page) took the player: reset the row
+aud.onpause=()=>{if(cur&&!aud.ended){cur.b.innerHTML=PLAY;cur.b.classList.remove('on')}};aud.onplaying=()=>{if(cur){cur.b.innerHTML=STOP;cur.b.classList.add('on')}};
+aud.ontimeupdate=()=>{if(cur&&cur.wv&&aud.duration)MiniWave.bar(cur.wv).style.transform='scaleX('+aud.currentTime/aud.duration+')'};
+function play(t,b,r,f){if(cur&&cur.b===b){if(aud.paused){aud.play().catch(()=>{});return}aud.pause();off();return}off();
+  const seek=()=>{aud.currentTime=f!=null?f*aud.duration:Math.min(t.start,aud.duration-30)};
+  aud.meta={title:t.title,artist:t.artist||'',from:'Energy tags',wave:'/set/wave?mini=1&id='+encodeURIComponent(t.id)};aud.src='/play?id='+t.id;
+  aud.onloadedmetadata=seek;aud.play().catch(()=>{});cur={b,r,t,btns:r._btns,wv:r._wv,ok:r._ok};b.innerHTML=STOP;b.classList.add('on');r.classList.add('playing');
+  if(aud.duration)seek()}   // same file as last time: already loaded, so no loadedmetadata will come
+function status(s){S=s;const m=s.model,j=s.job;let x=s.tags+' tagged';
+  if(j.state==='working')x+=' · analysing '+j.done+'/'+j.total;
+  if(m)x+=' · within a step '+pct(m.new.agree)+' (old '+pct(m.old.agree)+')'+(m.new.mae!=null?' · off by '+m.new.mae.toFixed(1)+' on average':'')+(s.active?' · in use':s.tags<s.min?' · '+(s.min-s.tags)+' more to switch on':'');
+  $('st').textContent=x;$('train').disabled=s.tags<10;$('mids').hidden=!s.old_tags;$('mids').textContent='Re-rate old tags ('+s.old_tags+')';
+  clearTimeout(poll);if(j.state==='working')poll=setTimeout(()=>fetch('/energy/status').then(r=>r.json()).then(status),5000)}
+async function tag(t,v,btns){const was=btns.find(b=>b.getAttribute('aria-pressed')==='true');const nv=was&&+was.dataset.v===v?0:v;
+  const r=await fetch('/energy/tag',{method:'POST',body:JSON.stringify({id:t.id,v:nv})});if(!r.ok)return;
+  btns.forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===nv)));btns[0].closest('.m').classList.toggle('done',nv>0);status(await r.json())}
+async function load(retag){const q=await (await fetch('/energy/queue'+(retag?'?retag=1':''))).json();$('list').replaceChildren(...q.map(t=>{
+  const b=el('button',{className:'pl',type:'button',innerHTML:PLAY,ariaLabel:'Play'}),r=el('div',{className:'m'});
+  const btns=Array.from({length:10},(_,i)=>{const x=el('button',{type:'button',textContent:i+1,title:'Energy '+(i+1)});x.style.setProperty('--i',i);x.dataset.v=i+1;
+    x.setAttribute('aria-pressed',String(t.tag===i+1));if(t.tag==null&&t.was!=null&&Math.round(t.was)===i+1){x.classList.add('was');x.title+=' (old tag sat about here)'}
+    if(t.now!=null&&Math.round(t.now)===i+1){x.classList.add('now');x.title+=' (current logic: '+t.now+')'}
+    x.onclick=()=>tag(t,i+1,btns);return x});r._btns=btns;
+  const nv=t.now!=null?Math.min(10,Math.max(1,Math.round(t.now))):null;
+  const ok=el('button',{type:'button',className:'ok',textContent:nv?'✓ Agree · '+nv:'No guess yet',disabled:!nv,title:nv?'Current logic rates this '+t.now+'. Keep it as your rating.':'Not analysed yet'});
+  ok.onclick=()=>{if(btns[nv-1].getAttribute('aria-pressed')!=='true')tag(t,nv,btns)};r._ok=ok;if(t.tag)r.classList.add('done');
+  b.onclick=()=>play(t,b,r);
+  r._wv=MiniWave.make(t.id,f=>{if(cur&&cur.r===r){if(aud.duration)aud.currentTime=f*aud.duration;if(aud.paused)aud.play().catch(()=>{})}else play(t,b,r,f)},{peak:'rgba(255,255,255,.62)',bass:'#ff7ab8'});r.append(b,el('div',{className:'t'},el('b',{textContent:t.title}),el('span',{textContent:(t.artist?t.artist+' · ':'')+Math.round(t.bpm)+' BPM'})),el('div',{className:'v'},ok,el('small',{},'Low'),...btns,el('small',{},'Peak')),r._wv);return r}));scrollTo(0,0)}
+$('more').onclick=()=>{off();load()};$('mids').onclick=()=>{off();load(true)};
+addEventListener('keydown',e=>{if(cur&&aud.duration&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();aud.currentTime=Math.max(0,Math.min(aud.duration-1,aud.currentTime+(e.key==='ArrowRight'?10:-10)));return}
+  if(cur&&e.key==='Enter'&&!cur.ok.disabled&&document.activeElement.tagName!=='BUTTON'){e.preventDefault();cur.ok.click();return}   // Enter = agree with the current logic
+  if(!cur||e.metaKey||e.ctrlKey||e.altKey||!/^[0-9]$/.test(e.key))return;e.preventDefault();const v=+e.key||10;
+  const b=cur.btns[v-1];if(b.getAttribute('aria-pressed')!=='true')tag(cur.t,v,cur.btns)});   // number keys rate the playing track (never toggles it off)
+$('train').onclick=async()=>{const b=$('train');b.disabled=true;b.textContent='Training…';
+  const r=await (await fetch('/energy/train',{method:'POST'})).json();b.textContent='Train';
+  if(r.error){$('st').textContent=r.error;b.disabled=false}else status(r)};
+fetch('/energy/analyse',{method:'POST'}).then(r=>r.json()).then(status);load();
+</script></body></html>

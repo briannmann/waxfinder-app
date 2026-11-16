@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waxfinder Clean up</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23ff4d2e'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23c6ff3d'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{--lime:#c6ff3d;--ember:#ff4d2e;--magenta:#ff2e88;--glass:rgba(30,46,128,.34);--glass-line:rgba(255,255,255,.34);
+  --font:"Archivo",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--pad:clamp(16px,3vw,40px)}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{overflow-x:clip}
+body{margin:0;background:#3a74c4;color:#fff;font:400 16px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+a{color:inherit}button,input{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:3px solid var(--lime);outline-offset:3px;border-radius:12px}
+.bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(60% 55% at 86% 8%,rgba(255,255,255,.32),transparent 72%),radial-gradient(55% 50% at 6% 94%,rgba(255,170,212,.75),transparent 72%),linear-gradient(160deg,rgb(52,112,196),rgb(178,170,232))}
+.nav{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:20px var(--pad);pointer-events:none;transition:padding .3s}
+.nav>*{pointer-events:auto}
+.nav::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(40,90,170,.74);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);opacity:0;transition:opacity .3s}
+.nav.stuck::before{opacity:1}.nav.stuck{padding-top:14px;padding-bottom:14px}
+.logo{font-weight:900;font-stretch:125%;font-size:22px;letter-spacing:-.03em;text-decoration:none}
+.pill{display:inline-flex;gap:28px;align-items:center;border:2px solid #fff;border-radius:999px;padding:10px 22px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13px}
+.pill a{text-decoration:none}.pill a:hover{opacity:.7}.pill a.on{color:var(--lime)}
+a.solo{text-decoration:none}a.solo:hover{background:#fff;color:var(--ember)}
+main{padding:128px var(--pad) clamp(56px,9vh,120px)}
+h1{margin:0 0 24px;font-weight:900;font-stretch:125%;font-size:clamp(38px,8.2vw,140px);line-height:.9;letter-spacing:-.035em;text-transform:uppercase;white-space:nowrap}
+.ghost{border:2px solid #fff;background:transparent;border-radius:999px;padding:10px 22px;font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;transition:background-color .2s,color .2s;display:inline-block}
+.ghost:hover:not(:disabled){background:#fff;color:#14062e}.ghost:disabled{opacity:.4;cursor:default}
+.ghost.lime{border-color:var(--lime);color:var(--lime)}.ghost.lime:hover:not(:disabled){background:var(--lime);color:#14062e}
+.ghost.warn{border-color:#ffd0c4;color:#ffd0c4}.ghost.warn.sure{background:var(--ember);border-color:var(--ember);color:#fff}
+.glass{background:var(--glass);border:1px solid var(--glass-line);border-radius:28px;-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);box-shadow:0 24px 60px rgba(0,0,0,.28)}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:22px}
+.top .st{font-weight:700;font-size:14px;color:rgba(255,255,255,.88)}.top .sp{flex:1}
+.bar{width:200px;height:6px;border-radius:9px;background:rgba(255,255,255,.22);overflow:hidden}.bar i{display:block;height:100%;background:#fff;transform-origin:left;transform:scaleX(0);transition:transform .3s}
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.tab{border:2px solid rgba(255,255,255,.4);background:transparent;border-radius:20px;padding:12px 18px;text-align:left;min-width:150px;transition:background-color .2s,border-color .2s}
+.tab b{display:block;font-size:26px;font-weight:900;font-stretch:125%;line-height:1.1}.tab small{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+.tab.on{background:rgba(255,255,255,.18);border-color:#fff}
+.panel{padding:clamp(16px,2.2vw,26px)}
+.phead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px}.phead p{margin:0;flex:1 1 280px;color:rgba(255,255,255,.85);font-size:14px}
+.row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:9px 6px;border-bottom:1px solid rgba(255,255,255,.14);border-radius:10px}
+.row:last-child{border-bottom:0}
+.row input[type=checkbox]{width:18px;height:18px;accent-color:var(--lime)}
+.row .nm{min-width:0}.row .nm b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .nm span{display:block;font-size:12px;color:rgba(255,255,255,.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .nm .to{color:var(--lime)}
+.row .nm .artyp{display:block;margin-top:6px;width:100%;max-width:460px;height:34px;padding:0 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.5);background:rgba(10,12,50,.35);color:#fff;font:600 14px var(--font)}.row .nm .artyp[hidden]{display:none}.row .nm .artyp:focus{outline:none;border-color:var(--lime)}
+.pv{display:flex;align-items:center;gap:10px;margin-top:6px;max-width:460px}
+.pv .pvb{flex:none;width:30px;height:30px;border-radius:50%;border:1.5px solid #fff;background:transparent;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer}
+.pv .pvb:hover,.pv .pvb[data-s=play]{background:#fff;color:#14062e}
+.pv .pvb[data-s=play] svg,.pv .pvb:hover svg{fill:#14062e}
+.pv .pvb svg{width:12px;height:12px;fill:currentColor}
+.pv .wv{flex:1;min-width:120px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.chip{border-radius:999px;background:rgba(10,12,50,.4);padding:3px 10px;font-size:12px;font-weight:800;white-space:nowrap}
+.chip.keep{background:var(--lime);color:#14062e}.chip.bad{background:rgba(255,46,136,.55)}
+.grp{border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:6px 10px;margin-bottom:12px;background:rgba(10,12,50,.18)}
+.more{margin-top:10px}.empty{color:rgba(255,255,255,.8);padding:10px 4px}
+.log{margin-top:34px}.log h2{font-size:15px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px}
+.lrow{display:flex;gap:14px;align-items:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.14);font-size:14px}.lrow span{flex:1}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:20;padding:12px 20px;border-radius:999px;background:rgba(20,6,46,.92);border:1px solid rgba(255,255,255,.2);font-weight:700;font-size:14px}
+.ghost.mini{padding:5px 12px;font-size:11px;border-width:1.5px}
+.row .nm .upw{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;white-space:normal;overflow:visible;color:#fff}.row .nm .up{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1;white-space:normal;overflow:visible;color:#fff}
+.upurl{height:30px;min-width:220px;flex:1;padding:0 12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:#fff;font:inherit;font-size:13px}
+.row .nm .up[hidden],.row .nm .upw [hidden]{display:none!important}
+</style>
+<link rel="stylesheet" href="/static/site.css"><script src="/static/nav.js" defer></script><script src="/static/addtracks.js" defer></script><script src="/static/drivebar.js" defer></script>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<header class="nav" id="nav">
+  <a class="logo" href="/" aria-label="Waxfinder home">wax.finder</a>
+  <nav class="pill" aria-label="Sections"><a href="/#top">Discover</a><a href="/#picks">Picks</a><a href="/crates">Crates</a><a href="/crates#library">Library</a><a href="/set">Set</a></nav>
+</header>
+<main>
+  <h1>Clean up.</h1>
+  <div class="top"><button class="ghost lime" id="scan" type="button">Scan library</button><span class="st" id="st"></span><span class="bar" id="bar" hidden><i></i></span><span class="sp"></span></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <section class="panel glass" id="panel" aria-live="polite"></section>
+  <section class="log" id="log" hidden><h2>Recent changes</h2><div id="loglist"></div></section>
+</main>
+<div class="toast" id="toast" hidden role="status"></div>
+<script src="/static/player.js"></script><script src="/static/miniwave.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const el=(t,a={},...k)=>{const e=Object.assign(document.createElement(t),a);e.append(...k);return e};
+const MB=b=>b>=1e9?(b/1e9).toFixed(1)+' GB':Math.round(b/1e6)+' MB';
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(r=>r.json());
+let H=null,FX=[],AR={items:[],job:{}},MS={missing:0},FOUND=null,tab='dups',timer=0;if(location.hash==='#artists')tab='artists';if(location.hash==='#missing')tab='missing';
+function toast(t){const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,4200)}
+addEventListener('scroll',()=>$('nav').classList.toggle('stuck',scrollY>40),{passive:true});
+
+const when=t=>new Date(t*1000).toLocaleString(undefined,{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}),files=n=>n+(n===1?' file':' files');
+async function status(){const s=await fetch('/lib/status').then(r=>r.json()),j=s.job;
+  const busy=j.state==='working';$('bar').hidden=!busy;$('bar').firstChild.style.transform='scaleX('+(j.total?j.done/j.total:0)+')';
+  $('scan').disabled=busy;
+  $('st').textContent=busy?'Scanning '+j.done+' / '+j.total+'…':(H?(!H.scanned&&!H.total?'Nothing scanned yet.':(H.offline?(H.reachable?H.reachable.toLocaleString()+' of '+H.total.toLocaleString()+' files found · '+H.offline.toLocaleString()+' missing. Last scan ':'Music folder not connected: showing the last scan of '+H.total.toLocaleString()+' files. Nothing was checked · '):H.total.toLocaleString()+' files scanned · ')+when(H.scanned)):'');
+  drawLog(s.log);
+  if(busy){clearTimeout(timer);timer=setTimeout(status,1200)}else if(j.state==='done'&&scan.waiting){scan.waiting=false;await load()}}
+async function load(){[H,FX,AR,MS]=await Promise.all([fetch('/lib/health').then(r=>r.json()),fetch('/lib/fixes').then(r=>r.json()),fetch('/lib/artists').then(r=>r.json()),fetch('/lib/missing').then(r=>r.json()).catch(()=>({missing:0}))]);drawTabs();drawPanel();status()}
+function scan(){scan.waiting=true;post('/lib/scan').then(status)}
+$('scan').onclick=scan;
+
+const TABS=()=>{const blind=H.total>0&&!H.reachable,c=n=>blind?'–':n;return [['dups','Duplicates',c(H.dups.length),blind?'not checked':'~'+MB(H.wasted)+' to reclaim'],['fixes','Names & tags',c(FX.length),'ready to tidy'],['artists','Find artists',AR.items.length,AR.targets+' with no artist anywhere'],['low','Low bitrate',c(H.low.length),'under 192 kbps'],['junk','Junk in names',c(H.junk.length),'site tags, "official video"'],['missing','Missing files',(MS.missing||0).toLocaleString(),'find moved music']]};
+function drawTabs(){$('tabs').replaceChildren(...TABS().map(([k,l,n,s])=>{const b=el('button',{className:'tab'+(k===tab?' on':''),type:'button',role:'tab'},el('b',{},String(n)),el('small',{},l+' · '+s));b.onclick=()=>{tab=k;drawTabs();drawPanel()};return b}))}
+const info=r=>el('div',{className:'chips'},el('span',{className:'chip'},r.ext.replace('.','').toUpperCase()),el('span',{className:'chip'+(r.ext.match(/mp3|m4a/)&&r.br<192?' bad':'')},r.br+' kbps'),el('span',{className:'chip'},MB(r.size)),el('span',{className:'chip'},Math.floor(r.dur/60)+':'+String(Math.round(r.dur%60)).padStart(2,'0')));
+const sure=(btn,label,run)=>{btn.onclick=async()=>{if(btn.dataset.sure!=='1'){btn.dataset.sure='1';btn.classList.add('sure');btn.textContent='Sure? '+label;setTimeout(()=>{if(btn.isConnected){btn.dataset.sure='';btn.classList.remove('sure');btn.textContent=label}},3500);return}
+  btn.disabled=true;await run()}};
+
+function rows(list,{check,render,chk=true,limit=150}){const boxes=[];const show=list.slice(0,limit);
+  const nodes=show.map(x=>{const c=el('input',{type:'checkbox',checked:chk});c.dataset.p=x.path;boxes.push(c);return el('label',{className:'row'},c,render(x),info(x))});
+  const more=list.length>limit?el('p',{className:'empty'},'Showing '+limit+' of '+list.length+'. Do these, then the rest appear.'):null;return {nodes:more?[...nodes,more]:nodes,boxes}}
+
+/* Low bitrate -> a better copy: search, paste a link, it downloads at 320, takes the old file's place in every crate/set,
+   and the old file goes to the drive's trash folder (Undo below brings the file back). */
+function upgrader(r){const q=r.name.replace(/\.[^.]+$/,'');
+  const open=el('button',{className:'ghost mini',type:'button'},'Replace');const box=el('span',{className:'up',hidden:true});
+  const find=el('a',{className:'ghost mini',href:'https://www.youtube.com/results?search_query='+encodeURIComponent(q),target:'_blank',rel:'noopener'},'Find');
+  const url=el('input',{type:'url',placeholder:'Paste a better link',className:'upurl'});url.setAttribute('aria-label','Link for a better copy of '+q);
+  const go=el('button',{className:'ghost lime mini',type:'button'},'Get 320');
+  open.onclick=e=>{e.preventDefault();open.hidden=true;box.hidden=false;url.focus()};
+  go.onclick=async e=>{e.preventDefault();const u=url.value.trim();if(!/^https?:\/\//.test(u)){url.focus();return}
+    go.disabled=url.disabled=true;go.textContent='Starting';
+    const s=await post('/lib/upgrade',{path:r.path,url:u});if(!s.id){go.textContent=s.error||'Failed';go.disabled=url.disabled=false;return}
+    const poll=async()=>{const j=await fetch('/status?id='+s.id).then(x=>x.json()).catch(()=>({}));
+      if(j.status==='error'){go.textContent='Failed';go.title=j.error||'';go.disabled=url.disabled=false;return}
+      if(j.upgraded){toast('Replaced'+(j.replaced?' in '+j.replaced+(j.replaced===1?' crate/set':' crates/sets'):'')+' · old file in the trash folder');load();return}
+      go.textContent=j.status==='downloading'?'Downloading '+(j.pct||0)+'%':'Finishing';setTimeout(poll,1000)};poll()};
+  box.append(find,url,go);for(const x of [box,url])x.onclick=e=>e.stopPropagation();
+  return el('span',{className:'upw'},open,box)}
+
+/* Missing files: tracks whose file is not where it was. Search by file name (the library's folders, or a folder you point at),
+   tick, Reconnect. Nothing is moved or renamed; crates, energy and analysis stay attached. Undo is in Recent changes. */
+const WHY={renamed:'Renamed by Clean up',same:'Same file',length:'Same name and length',size:'Same name, different size'};
+function drawMissing(P){
+  const here=el('button',{className:'ghost lime',type:'button',disabled:!MS.can_search},'Search my music folder'),pick=el('button',{className:'ghost',type:'button'},'Look in another folder…');
+  const head=el('div',{className:'phead'},el('p',{},'Files that moved. Find them and reconnect. You can undo.'),here,pick);
+  const run=async(b,body)=>{here.disabled=pick.disabled=true;const was=b.textContent;b.textContent='Searching…';let r;try{r=await post('/lib/relocate/find',body)}catch(e){r={error:'Search failed'}}
+    b.textContent=was;pick.disabled=false;here.disabled=!MS.can_search;if(r.cancelled)return;if(r.error){toast(r.error);return}FOUND=r;drawPanel()};
+  here.onclick=()=>run(here,{});pick.onclick=()=>run(pick,{pick:true});
+  if(!MS.missing){FOUND=null;P.append(head,el('p',{className:'empty'},'Nothing is missing.'));return}
+  if(!FOUND&&MS.can_search&&drawMissing.n!==MS.missing){drawMissing.n=MS.missing;setTimeout(()=>run(here,{}),0)}   /* opening the tab searches by itself, once per count */
+  if(!FOUND){P.append(head,el('p',{className:'empty'},MS.missing.toLocaleString()+(MS.missing===1?' track has':' tracks have')+' no file right now.'+(MS.can_search?'':' Plug the drive back in, or look in the folder the music moved to.')));return}
+  const F=FOUND.found,boxes=[];const go=el('button',{className:'ghost lime',type:'button'},'Reconnect');head.append(go);
+  const nodes=F.slice(0,300).map(x=>{const cb=el('input',{type:'checkbox',checked:x.tick});cb.dataset.o=x.old;boxes.push(cb);
+    return el('label',{className:'row'},cb,el('div',{className:'nm'},el('b',{},x.name),el('span',{className:'to',title:x.new},'→ '+x.new.replace(/\/[^/]*$/,''))),el('div',{className:'chips'},el('span',{className:'chip'+(x.why==='size'?' bad':'')},WHY[x.why]||'')))});
+  const upd=()=>{const n=boxes.filter(x=>x.checked).length;go.disabled=!n;go.textContent='Reconnect '+n};boxes.forEach(x=>x.onchange=upd);upd();
+  go.onclick=async()=>{go.disabled=true;const r=await post('/lib/relocate/apply',{olds:boxes.filter(x=>x.checked).map(x=>x.dataset.o)});
+    toast(r.error||(files(r.moved||0)+' reconnected'));FOUND=null;await load()};
+  const sum=[F.length.toLocaleString()+' found'];if(FOUND.several)sum.push(FOUND.several.toLocaleString()+' with more than one match, left alone');if(FOUND.left)sum.push(FOUND.left.toLocaleString()+' not found here');
+  P.append(head,el('p',{className:'empty'},sum.join(' · ')+'.'),...nodes);
+  if(F.length>300)P.append(el('p',{className:'empty'},'Showing 300 of '+F.length+'. Reconnect these, then search again.'))}
+
+function drawPanel(){const P=$('panel');P.replaceChildren();
+  if(tab==='missing'){drawMissing(P);return}
+  if(tab==='dups'){const head=el('div',{className:'phead'},el('p',{},'Same song, more than one file. Exact copies are ticked. You can undo.'));
+    const boxes=[];const grps=H.dups.slice(0,60).map(g=>{const box=el('div',{className:'grp'});
+      g.copies.forEach((c,i)=>{const cb=el('input',{type:'checkbox',checked:i>0&&c.exact});cb.dataset.p=c.path;boxes.push(cb);
+        box.append(el('label',{className:'row'},cb,el('div',{className:'nm'},el('b',{},c.name),el('span',{},c.folder.replace('/Volumes/MUSIC/',''))),el('div',{className:'chips'},i===0?el('span',{className:'chip keep'},'Keep'):c.exact?el('span',{className:'chip bad'},'Exact copy'):el('span',{className:'chip'},'Possible duplicate'),info(c))))});return box});
+    const b=el('button',{className:'ghost warn',type:'button'},'Move ticked to trash');head.append(b);
+    const upd=()=>{const n=boxes.filter(x=>x.checked).length;b.disabled=!n;b.dataset.sure='';b.classList.remove('sure');b.textContent='Move '+n+' to trash'};boxes.forEach(x=>x.onchange=upd);upd();
+    sure(b,'move '+boxes.filter(x=>x.checked).length+' to trash',()=>doTrash(boxes));
+    P.append(head,...(grps.length?grps:[el('p',{className:'empty'},H.offline?(H.reachable?'None found among the '+H.reachable+' reachable tracks. '+H.offline+' could not be checked.':'Could not check: music folder not connected.'):'No duplicates found.')]));
+    if(H.dups.length>60)P.append(el('p',{className:'empty'},'Showing 60 of '+H.dups.length+' groups.'));return}
+  if(tab==='low'||tab==='junk'){const list=tab==='low'?H.low:H.junk;
+    const head=el('div',{className:'phead'},el('p',{},tab==='low'?'Under 192 kbps. Tick what you want gone.':'Messy file names. Fix them in Names & tags.'));
+    if(tab==='junk'){P.append(head,...(list.length?list.slice(0,150).map(r=>{const d=el('div',{className:'row'},el('span'),el('div',{className:'nm'},el('b',{},r.name),el('span',{className:'to'},r.why?r.why:'→ '+r.clean)),info(r));d.dataset.p=r.path;return d}):[el('p',{className:'empty'},H.total>0&&!H.reachable?'Could not check: music folder not connected.':'None.')]));return}
+    const R=rows(list,{chk:false,render:r=>el('div',{className:'nm'},el('b',{},r.name),el('span',{},r.folder.replace('/Volumes/MUSIC/','')),upgrader(r))});const b=el('button',{className:'ghost warn',type:'button'},'Move ticked to trash');head.append(b);
+    const upd=()=>{const n=R.boxes.filter(x=>x.checked).length;b.disabled=!n;b.dataset.sure='';b.classList.remove('sure');b.textContent='Move '+n+' to trash'};R.boxes.forEach(x=>x.onchange=upd);upd();
+    sure(b,'move ticked to trash',()=>doTrash(R.boxes));P.append(head,...(R.nodes.length?R.nodes:[el('p',{className:'empty'},H.total>0&&!H.reachable?'Could not check: music folder not connected.':'None.')]));return}
+  if(tab==='artists'){const job=AR.job||{},running=job.state==='running';
+    const go=el('button',{className:'ghost lime',type:'button',disabled:running},running?'Searching '+job.done+' / '+job.total+'…':(AR.searched?'Search the rest':'Search online'));
+    const poll=async()=>{AR=await fetch('/lib/artists').then(r=>r.json());if(tab!=='artists')return;if(AR.job.state==='running'){go.textContent='Searching '+AR.job.done+' / '+AR.job.total+'…';setTimeout(poll,2500)}else{drawTabs();drawPanel()}};
+    go.onclick=async()=>{go.disabled=true;await post('/lib/artists/run');poll()};if(running)setTimeout(poll,2500);
+    const head=el('div',{className:'phead'},el('p',{},'Tracks with no artist. Ticked rows are strong matches. You can undo.'),go);
+    if(job.error)head.append(el('p',{className:'empty'},job.error));
+    const rowsA=AR.items.map(f=>{const cb=el('input',{type:'checkbox',checked:f.level==='sure'});cb.dataset.p=f.path;
+      const typed=el('input',{type:'text',className:'artyp',placeholder:f.cands.length?'Type the artist':'No match found. Type the artist',maxLength:150});typed.setAttribute('aria-label','Type the artist for '+f.name);
+      typed.onclick=e=>{e.preventDefault();e.stopPropagation()};
+      const sel=f.cands.length?el('select',{},...f.cands.map(c=>el('option',{value:c.artist},c.artist+(c.why?' · '+c.why:(c.in_name?' · artist is in the file name':'')+(c.secs_off==null?' · wave unknown':c.secs_off<=3?' · same wave':' · wave differs by '+Math.round(c.secs_off)+'s')))),el('option',{value:'\u0000type'},'None of these: type it')):null;
+      const typing=()=>!sel||sel.value==='\u0000type';
+      const sync=()=>{typed.hidden=!typing()};sync();if(sel)sel.onchange=()=>{sync();if(!typed.hidden){typed.focus()}};
+      typed.oninput=()=>{cb.checked=!!typed.value.trim();upd()};
+      const value=()=>typing()?typed.value.trim():sel.value;
+      return {cb,f,value,typing,node:el('label',{className:'row'},cb,el('div',{className:'nm'},el('b',{},f.name),...(sel?[sel]:[]),typed),el('span'))}});
+    const head2=head;
+    const ap=el('button',{className:'ghost lime',type:'button'},'Write artists');head.append(ap);
+    const upd=()=>{const n=rowsA.filter(x=>x.cb.checked).length;ap.disabled=!n;ap.textContent='Write '+n+' artist'+(n===1?'':'s')};rowsA.forEach(x=>x.cb.onchange=upd);upd();
+    ap.onclick=async()=>{ap.disabled=true;const items=rowsA.filter(x=>x.cb.checked&&x.value()).map(x=>({path:x.f.path,artist:x.value(),custom:x.typing()}));const r=await post('/lib/artists/apply',{items});
+      toast(r.changed+' artists written'+((r.failed||[]).length?' · '+r.failed.length+' failed':''));scan.waiting=true;await load()};
+    P.append(head,...(rowsA.length?rowsA.map(x=>x.node):[el('p',{className:'empty'},AR.searched?'No matches found.':'Press Search online.')]));return}
+  if(tab==='fixes'){const head=el('div',{className:'phead'},el('p',{},'Cleans file names and fills missing tags. You can undo.'));
+    const boxes=[];const show=FX.slice(0,150);
+    const nodes=show.map(f=>{const cb=el('input',{type:'checkbox',checked:true});cb.dataset.p=f.path;boxes.push(cb);
+      return el('label',{className:'row'},cb,el('div',{className:'nm'},el('b',{},f.name),f.new?el('span',{className:'to'},'→ '+f.new):'',f.tags?el('span',{className:'to'},(f.old&&f.old.artist&&f.old.artist!==f.tags.artist?'artist: '+f.old.artist+' → '+f.tags.artist+(f.why==='channel'?' (was the uploader)':''):'artist: '+f.tags.artist)+' · title: '+f.tags.title):''),el('span'))});
+    const b=el('button',{className:'ghost lime',type:'button'},'Tidy all');head.append(b);
+    // one button for the whole library: every proposed fix, minus any row you unticked (only the first 150 are listed)
+    const skip=()=>new Set(boxes.filter(x=>!x.checked).map(x=>x.dataset.p));
+    const upd=()=>{const n=FX.length-skip().size;b.disabled=!n;b.textContent='Tidy all '+n};boxes.forEach(x=>x.onchange=upd);upd();
+    b.onclick=async()=>{b.disabled=true;const s=skip(),todo=FX.map(f=>f.path).filter(p=>!s.has(p));let changed=0,failed=0,kept=0,why='';
+      for(let i=0;i<todo.length;i+=100){b.textContent='Tidying '+Math.min(i+100,todo.length)+' / '+todo.length;
+        const r=await post('/lib/fix',{paths:todo.slice(i,i+100)});changed+=r.changed||0;kept+=(r.kept||[]).length;failed+=(r.failed||[]).length;if(!why&&(r.failed||[]).length){const f=r.failed[0];why=' — '+f.path.split('/').pop()+': '+(f.error||'unknown error')}}
+      toast(changed+' changes made'+(kept?' · '+kept+' kept their name (used elsewhere in Waxfinder)':'')+(failed?' · '+failed+' failed'+why:''));await load()};
+    P.append(head,...(nodes.length?nodes:[el('p',{className:'empty'},'Nothing to tidy.')]),...(FX.length>show.length?[el('p',{className:'empty'},'and '+(FX.length-show.length)+' more')]:[]));
+  }}
+
+
+/* Preview: a play button + scrubbable waveform on every row that has a file, so you can hear what you are about to keep, fix or remove. */
+const PI={play:'<svg viewBox="0 0 12 12"><path d="M2.5 1.2v9.6L10.8 6z"/></svg>',stop:'<svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1"/></svg>'};
+let pvCur=null;const pvAud=window.WaxPlayer?WaxPlayer.audio({}):null;
+function pvReset(){if(!pvCur)return;pvCur.btn.innerHTML=PI.play;delete pvCur.btn.dataset.s;if(pvCur.wv)MiniWave.bar(pvCur.wv).style.transform='scaleX(0)';pvCur=null}
+if(pvAud){pvAud.onended=pvReset;pvAud.onemptied=pvReset;pvAud.onpause=()=>{if(pvCur&&!pvAud.ended){pvCur.btn.innerHTML=PI.play;delete pvCur.btn.dataset.s}};pvAud.onplaying=()=>{if(pvCur){pvCur.btn.innerHTML=PI.stop;pvCur.btn.dataset.s='play'}};
+  pvAud.ontimeupdate=()=>{if(pvCur&&pvCur.wv&&pvAud.duration)MiniWave.bar(pvCur.wv).style.transform='scaleX('+pvAud.currentTime/pvAud.duration+')'};
+  pvAud.onloadedmetadata=()=>{if(pvCur&&pvCur.at!=null&&pvAud.duration){pvAud.currentTime=pvCur.at*pvAud.duration;pvCur.at=null}}}
+function pvPlay(id,name,btn,wv,at){if(!pvAud)return;
+  if(pvCur&&pvCur.id===id){if(at!=null&&pvAud.duration)pvAud.currentTime=at*pvAud.duration;else if(at==null){if(pvAud.paused)pvAud.play().catch(()=>{});else{pvAud.pause();pvReset()}}return}
+  pvReset();pvAud.meta={title:name.replace(/\.[^.]+$/,''),artist:'',from:'Clean up'};pvAud.src='/play?id='+encodeURIComponent(id);pvCur={id,btn,wv,at};pvAud.play().catch(()=>{});btn.innerHTML=PI.stop;btn.dataset.s='play';
+  if(at!=null&&pvAud.duration){pvAud.currentTime=at*pvAud.duration;pvCur.at=null}}   // same file as last time: it is already loaded, so no loadedmetadata will come
+async function addPreviews(){const P=$('panel');const rowsEl=[...P.querySelectorAll('.row')].map(r=>({r,p:(r.querySelector('[data-p]')||r).dataset.p})).filter(x=>x.p);if(!rowsEl.length||!window.MiniWave)return;
+  const ids=await post('/lib/ids',{paths:rowsEl.map(x=>x.p)}).catch(()=>({}));
+  for(const {r,p} of rowsEl){const id=ids[p];if(!id||r.querySelector('.pv'))continue;const name=p.split('/').pop();
+    const btn=el('button',{type:'button',className:'pvb',innerHTML:PI.play});btn.setAttribute('aria-label','Play '+name);
+    const wv=MiniWave.make(id,f=>pvPlay(id,name,btn,wv,f),{peak:'rgba(255,255,255,.75)',bass:'rgba(20,34,110,.95)'});
+    btn.onclick=e=>{e.preventDefault();e.stopPropagation();pvPlay(id,name,btn,wv,null)};
+    const box=el('div',{className:'pv'},btn,wv);box.addEventListener('click',e=>{if(e.target.closest('.pvb'))return;e.preventDefault();e.stopPropagation()},true);   /* capture: the wave stops its own clicks, which would let the row's label tick the box */
+    if(pvCur&&pvCur.id===id){pvCur.btn=btn;pvCur.wv=wv;btn.innerHTML=PI.stop;btn.dataset.s='play'}
+    (r.querySelector('.nm')||r).append(box)}}
+const _dp=drawPanel;drawPanel=function(){_dp();addPreviews()};
+async function doTrash(boxes){const paths=boxes.filter(x=>x.checked).map(x=>x.dataset.p);const r=await post('/lib/trash',{paths});toast(files(r.moved)+' moved to the trash folder'+(r.skipped&&r.skipped.length?' · '+r.skipped.length+' skipped':''));await load()}
+function drawLog(items){$('log').hidden=!items.length;$('loglist').replaceChildren(...items.slice(0,8).map(b=>{
+  const u=el('button',{className:'ghost',type:'button',disabled:b.undone},b.undone?'Undone':'Undo');u.onclick=async()=>{u.disabled=true;const r=await post('/lib/undo',{batch:b.batch});toast(r.error||((b.kind==='relocate'?'Undone':r.restored+' restored')+(r.blocked&&r.blocked.length?' · '+r.blocked.length+' blocked':'')));scan.waiting=true;setTimeout(()=>{status();load()},1500)};
+  return el('div',{className:'lrow'},el('span',{},(b.kind==='trash'?'Moved to trash':b.kind==='forget'?'Removed from Waxfinder':b.kind==='relocate'?'Reconnected':'Names & tags')+' · '+files(b.count)+' · '+when(b.time)),u)}))}
+load();
+</script>
+<script src="/static/analyse.js"></script><script src="/static/toaststack.js"></script>
+</body>
+</html>

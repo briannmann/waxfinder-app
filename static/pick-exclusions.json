@@ -1,0 +1,3 @@
+{
+  "pattern": "\\b(?:(?:official(?:[\\s-]+(?:music|lyric|hd|4k|remastered))*|music)[\\s-]+video(?:clip)?|officialvideo|video[\\s-]+(?:clip|edit|version)|radio[\\s-]+(?:edit|mix|version|cut)|short[\\s-]+(?:edit|mix|version|cut)|single[\\s-]+(?:edit|version))\\b|[\\[(]\\s*(?:official\\s+)?video(?:\\s+(?:hd|4k))?\\s*[\\])]"
+}

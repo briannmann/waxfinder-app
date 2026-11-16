@@ -1,0 +1,153 @@
+/* Waxfinder liquid gear. All selectors are scoped to .art* classes. */
+.art {
+  --art-ink-color: #14062e;
+  --art-deep: #0c0c13;
+  --art-white: #fff;
+  position: relative;
+  perspective: 650px;
+  transform-style: preserve-3d;
+  display: block;
+  width: 190px;
+  height: 190px;
+  overflow: visible;
+}
+.art .art-svg {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  transform-origin: 50% 50%;
+  transform: rotateX(var(--rx, 8deg)) rotateY(var(--ry, -10deg));
+  transition: transform .16s ease-out;
+}
+.art .art-motif-layer {
+  position: absolute; inset: 0; pointer-events: none;
+  transform: rotateX(var(--rx, 8deg)) rotateY(var(--ry, -10deg)) translateZ(14px);
+}
+.art .art-body-light { stop-color: hsl(var(--h) 94% 94%); }
+.art .art-body-mid { stop-color: hsl(var(--h) 92% 78%); }
+.art .art-body-color { stop-color: hsl(var(--h) 83% 52%); }
+.art .art-body-shade { stop-color: hsl(var(--h) 78% 22%); }
+.art .art-glow-light { stop-color: hsl(var(--h) 100% 79%); stop-opacity: .52; }
+.art .art-clear { stop-color: hsl(var(--h) 90% 65%); stop-opacity: 0; }
+.art .art-ink-light { stop-color: hsl(var(--h) 24% 25%); }
+.art .art-ink-mid { stop-color: var(--art-ink-color); }
+.art .art-ink-dark { stop-color: var(--art-deep); }
+.art .art-face-light { stop-color: hsl(var(--h) 65% 96%); }
+.art .art-face-mid { stop-color: hsl(var(--h) 78% 80%); }
+.art .art-face-shade { stop-color: hsl(var(--h) 66% 50%); }
+.art .art-rim-light { stop-color: var(--art-white); stop-opacity: .85; }
+.art .art-rim-clear { stop-color: var(--art-white); stop-opacity: .04; }
+.art .art-rim-low { stop-color: hsl(var(--h) 95% 82%); stop-opacity: .8; }
+.art .art-contact { fill: #080510; opacity: .42; }
+.art .art-extrusion { fill: hsl(var(--h) 68% 20%); }
+.art .art-body { fill: var(--art-body); }
+.art .art-inner-glow { fill: var(--art-glow); }
+.art .art-rim { fill: none; stroke: var(--art-rim); stroke-width: 1.7; }
+.art .art-still { display: none; }
+.art .art-wet { fill: var(--art-white); opacity: .56; pointer-events: none; }
+.art .art-ink { fill: var(--art-ink); stroke: var(--art-bevel); stroke-width: 1.3; }
+.art .art-face { fill: var(--art-face); }
+.art .art-hole { fill: var(--art-deep); }
+.art .art-white { fill: var(--art-white); }
+.art .art-muted { fill: hsl(var(--h) 25% 44%); }
+.art .art-tick { fill: var(--art-ink-color); opacity: .55; }
+.art .art-groove { fill: none; stroke: hsl(var(--h) 48% 80%); stroke-width: .7; opacity: .24; }
+.art .art-etch, .art .art-cd-glint {
+  fill: none; stroke: var(--art-white); stroke-width: 2;
+  stroke-linecap: round; opacity: .46;
+}
+.art .art-cd-glint { stroke-width: 7; opacity: .55; }
+.art .art-label-mark { fill: none; stroke: var(--art-ink-color); stroke-width: 2.6; stroke-linecap: round; }
+.art .art-jog-dots { fill: none; stroke: hsl(var(--h) 80% 88%); stroke-width: 3; stroke-dasharray: 1 8; stroke-linecap: round; opacity: .65; }
+.art .art-band-shadow { fill: none; stroke: var(--art-ink-color); stroke-width: 16; stroke-linecap: round; }
+.art .art-band { fill: none; stroke: var(--art-face); stroke-width: 10; stroke-linecap: round; }
+.art .art-band-glint { fill: none; stroke: var(--art-white); stroke-width: 2; stroke-linecap: round; opacity: .6; }
+.art .art-tape-well, .art .art-cone-well { fill: var(--art-deep); }
+.art .art-reel-groove { fill: none; stroke: var(--art-ink-color); stroke-width: 1; opacity: .35; }
+.art .art-reel-spokes { fill: none; stroke: var(--art-ink-color); stroke-width: 3; stroke-linecap: round; }
+.art .art-speaker-ring { fill: var(--art-ink); stroke: hsl(var(--h) 62% 70%); stroke-width: 1.5; }
+.art .art-knob-face { fill: var(--art-ink); stroke: hsl(var(--h) 40% 55%); stroke-width: 1; }
+.art .art-rail { fill: var(--art-ink-color); opacity: .6; }
+.art .art-mic-cradle { fill: none; stroke: var(--art-ink-color); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.art .art-mic-grille { fill: none; stroke: var(--art-face); stroke-width: 4; stroke-linecap: round; }
+.art .art-spin, .art .art-turn { transform-origin: 80px 80px; }
+.art .art-reel, .art .art-mini-turn { transform-box: fill-box; transform-origin: center; }
+.art .art-cone { transform-origin: 81px 98px; }
+.art .art-meter { transform-box: fill-box; transform-origin: center bottom; }
+.art .art-drip { transform-box: fill-box; transform-origin: center; }
+
+/* Motif motion is opt-in; a normal tile's only movement is its slow hull. */
+.playing .art .art-spin { animation: art-spin 6s linear infinite; }
+.playing .art .art-kind-jog .art-spin { animation-duration: 3s; }
+.playing .art .art-bob { animation: art-bob 1.8s ease-in-out infinite alternate; }
+.playing .art .art-reel { animation: art-spin 2.6s linear infinite; }
+.playing .art .art-meter { animation: art-meter .85s ease-in-out infinite alternate; animation-delay: var(--art-delay, 0s); }
+.playing .art .art-drip { animation: art-drip 1.1s ease-in-out infinite alternate; animation-delay: var(--art-delay, 0s); }
+.playing .art .art-cone { animation: art-thump .7s ease-in-out infinite; }
+.playing .art .art-turn { animation: art-turn 3.8s ease-in-out infinite alternate; }
+.playing .art .art-slider { animation: art-slide 2.4s ease-in-out infinite alternate; animation-delay: var(--art-delay, 0s); }
+.playing .art .art-mini-turn { animation: art-turn 3s ease-in-out infinite alternate; animation-delay: var(--art-delay, 0s); }
+@keyframes art-spin { to { transform: rotate(360deg); } }
+@keyframes art-bob { from { transform: translateY(1px) rotate(-1deg); } to { transform: translateY(-3px) rotate(1deg); } }
+@keyframes art-meter { from { transform: scaleY(.53); } to { transform: scaleY(1); } }
+@keyframes art-drip { from { transform: scaleY(.72); } to { transform: scaleY(1.08); } }
+@keyframes art-thump { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.07); } }
+@keyframes art-turn { from { transform: rotate(-28deg); } to { transform: rotate(35deg); } }
+@keyframes art-slide { from { transform: translateY(-7px); } to { transform: translateY(10px); } }
+
+/* Standalone contact sheet. The art above has no page/layout dependencies. */
+.art-test {
+  --art-page: #130b23;
+  --art-text: #f3eefa;
+  --art-caption: #b7a8cb;
+  --art-line: hsl(270 65% 85% / .13);
+  --art-glass: hsl(270 50% 90% / .035);
+  --art-font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  background: var(--art-page);
+  color: var(--art-text);
+  font-family: var(--art-font);
+  overflow-x: clip;
+  color-scheme: dark;
+}
+.art-test *, .art-test *::before, .art-test *::after { box-sizing: border-box; }
+.art-test .art-sheet { max-width: 1240px; margin: 0 auto; padding: 48px 32px 70px; }
+.art-test .art-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+.art-test .art-heading { margin: 0 0 10px; font-size: clamp(28px, 4vw, 44px); font-weight: 600; letter-spacing: -.045em; }
+.art-test .art-note { margin: 0; font-size: 14px; line-height: 1.6; color: var(--art-caption); }
+.art-test .art-toggle {
+  flex-shrink: 0; padding: 12px 18px; border: 1px solid var(--art-line);
+  border-radius: 30px; background: var(--art-glass); color: var(--art-text);
+  font: inherit; font-size: 13px; cursor: pointer;
+}
+.art-test .art-toggle:hover { background: hsl(270 50% 90% / .09); }
+.art-test .art-toggle[aria-pressed="true"] { border-color: hsl(150 75% 72% / .65); }
+.art-test .art-toggle:focus-visible { outline: 2px solid var(--art-text); outline-offset: 4px; }
+.art-test .art-section { margin: 0 0 30px; }
+.art-test .art-section-title { margin: 0 0 12px; font-size: 15px; font-weight: 500; }
+.art-test .art-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; }
+.art-test .art-swatch {
+  --h: 150;
+  margin: 0; padding: 10px 0 12px; min-width: 0;
+  border-radius: 28px; border: 1px solid var(--art-line);
+  background: radial-gradient(ellipse at 60% 25%, hsl(var(--h) 65% 55% / .09), transparent 75%), var(--art-glass);
+}
+.art-test .art-swatch .art { --h: inherit; margin: 0 auto; }
+.art-test .art-caption { text-align: center; font-size: 11px; color: var(--art-caption); line-height: 1.5; }
+.art-test .art-footer { padding-top: 12px; border-top: 1px solid var(--art-line); }
+@media (max-width: 1120px) {
+  .art-test .art-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .art-test .art-sheet { padding: 28px 16px 48px; }
+  .art-test .art-header { align-items: flex-start; flex-direction: column; }
+  .art-test .art-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+}
+@media (max-width: 430px) {
+  .art-test .art-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .art .art-svg { transform: none; transition: none; }
+  .art .art-morphing { display: none; }
+  .art .art-still { display: inline; }
+  .art .art-motif, .art .art-motif * { animation: none !important; }
+  .art-test .art-toggle { transition: none; }
+}
