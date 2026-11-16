@@ -7,6 +7,7 @@ out/
 # the app's own data, created at run time: never commit
 *.log
 config.json
+connections.json
 history.json
 crates.json
 votes.json

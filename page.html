@@ -133,6 +133,22 @@ a.pill:hover{background:#fff;color:var(--violet)}
 .tpop input{flex:1;min-width:0;height:38px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;padding:0 14px;font:inherit;font-size:13px}
 .tpop input:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
 .tpop .err{color:#ff9fc4;font-size:13px}
+#conn{width:min(520px,calc(100vw - 32px));padding:26px;border-radius:28px;background:rgba(16,10,36,.94);color:#fff;border:1px solid rgba(255,255,255,.18);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 24px 60px rgba(0,0,0,.5);font-size:14px;line-height:1.4}
+#conn::backdrop{background:rgba(8,4,24,.6)}
+#conn h3{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
+#conn .sub{margin:0 0 18px;color:rgba(255,255,255,.66)}
+#conn .svc{display:grid;gap:8px;padding:14px 0;border-top:1px solid rgba(255,255,255,.12)}
+#conn .svc b{font-size:15px}
+#conn .row{display:flex;gap:8px;align-items:center}
+#conn input{flex:1;min-width:0;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;padding:0 16px;font:inherit;font-size:13px}
+#conn input::placeholder{color:rgba(255,255,255,.45)}
+#conn .ghost{margin:0;padding:9px 18px;font-size:12px;flex:none}
+#conn .st{font-size:13px;color:rgba(255,255,255,.66)}
+#conn .st.ok{color:var(--lime)}
+#conn .st.err{color:#ff9fc4}
+#conn .foot{display:flex;justify-content:flex-end;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.tpop .conn-link{justify-self:start}
 .srcpop{left:0;right:auto;width:min(240px,calc(100vw - 32px));padding:12px 18px;display:grid;gap:2px}
 .srcpop label{display:flex;align-items:center;gap:12px;padding:7px 0;font-weight:700;font-size:14px;cursor:pointer}
 .srcpop label.off{opacity:.45;cursor:default}
@@ -656,7 +672,38 @@ function drawSources(on){if(!on)return;pickOn=new Set(on);const yt=pickOn.has('y
       $('srcpop').querySelectorAll('input').forEach(b=>b.disabled=true);
       try{const r=await fetch('/recs/sources',{method:'POST',body:JSON.stringify({off:PSRC.map(([s])=>s).filter(s=>!next.has(s))})});if(!r.ok)throw 0}catch(e){}
       loadRecs(false)};
-    return el('label',{className:rest?'off':''},box,el('span',{textContent:l}),...(rest?[el('small',{textContent:'needs YouTube'})]:[]))}))}
+    return el('label',{className:rest?'off':''},box,el('span',{textContent:l}),...(rest?[el('small',{textContent:'needs YouTube'})]:[]))}),
+    el('button',{type:'button',className:'ghost conn-link',textContent:'Connected accounts',onclick:openConnect}))}
+/* Connected sources: paste a public YouTube / SoundCloud / Discogs link (no login). They seed Picks, so a new install has picks.
+   The Sources button opens this when nothing is connected yet. */
+const CSVC=[['youtube','YouTube','Your channel or a playlist link','https://www.youtube.com/@you'],
+  ['soundcloud','SoundCloud','Your profile: brings in your likes and playlists','https://soundcloud.com/you'],
+  ['discogs','Discogs','Your username: brings in your collection and wantlist','your-username']];
+let conn=null,connT=0;
+async function connLoad(){try{conn=await (await fetch('/connections')).json()}catch(e){conn=null}return conn}
+function connAgo(ts){const m=Math.round((Date.now()/1000-ts)/60);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'}
+function connDraw(){const d=$('conn');if(!d||!conn)return;const box=d.querySelector('.svcs');
+  box.replaceChildren(...CSVC.map(([k,l,hint,ph])=>{const s=conn.services[k]||{},inp=el('input',{type:'text',value:s.link||'',placeholder:ph,'aria-label':l+' link',autocomplete:'off',spellcheck:false});
+    const st=el('div',{className:'st'+(s.error?' err':s.count?' ok':''),role:'status',textContent:s.working?'Reading '+l+'…':s.error?s.error:s.count?s.count+' tracks from '+(s.name||l)+' · '+connAgo(s.ts):hint});
+    const go=el('button',{type:'button',className:'ghost',textContent:s.working?'Reading…':s.count?'Re-sync':'Connect',disabled:!!s.working});
+    const send=async()=>{go.disabled=true;st.className='st';st.textContent='Reading '+l+'…';
+      try{const r=await fetch('/connections/connect',{method:'POST',body:JSON.stringify({service:k,link:inp.value})});const j=await r.json();
+        if(!r.ok){st.className='st err';st.textContent=j.error||'That link did not work';go.disabled=false;return}conn=j;connPoll()}
+      catch(e){st.className='st err';st.textContent='Could not reach the local server';go.disabled=false}};
+    go.onclick=send;inp.onkeydown=e=>{if(e.key==='Enter')send()};
+    const row=el('div',{className:'row'},inp,go);
+    if(s.count&&!s.working)row.append(el('button',{type:'button',className:'ghost',textContent:'Remove','aria-label':'Remove '+l,onclick:async()=>{
+      try{conn=await (await fetch('/connections/remove',{method:'POST',body:JSON.stringify({service:k})})).json()}catch(e){}connDraw()}}));
+    return el('div',{className:'svc'},el('b',{textContent:l}),row,st)}))}
+function connPoll(){clearTimeout(connT);connDraw();if(conn&&Object.values(conn.services).some(s=>s.working))connT=setTimeout(async()=>{await connLoad();connPoll()},1500)}
+function openConnect(){let d=$('conn');
+  if(!d){d=el('dialog',{id:'conn','aria-labelledby':'connh'},el('h3',{id:'connh',textContent:'Connect your sources'}),
+      el('p',{className:'sub',textContent:'Paste a public link. No login needed. Picks starts from the music you already like.'}),el('div',{className:'svcs'}),
+      el('div',{className:'foot'},el('button',{type:'button',className:'ghost',textContent:'Done',onclick:()=>d.close()})));
+    d.addEventListener('close',()=>{clearTimeout(connT);loadRecs(false)});document.body.append(d)}
+  $('srcs').open=false;connLoad().then(()=>{connPoll();if(!d.open)d.showModal()})}
+$('srcsum').addEventListener('click',async e=>{if($('srcs').open)return;e.preventDefault();await connLoad();
+  if(conn&&!conn.connected)openConnect();else $('srcs').open=true});
 document.addEventListener('click',e=>{const d=$('srcs');if(d.open&&!d.contains(e.target))d.open=false});
 document.addEventListener('keydown',e=>{const d=$('srcs');if(e.key==='Escape'&&d.open){d.open=false;$('srcsum').focus()}});
 async function loadRecs(force){
@@ -672,7 +719,9 @@ async function loadRecs(force){
     n.append(el('button',{type:'button',className:'lb-x',textContent:'Retry',onclick:()=>loadRecs(true)}),' ',
       el('button',{type:'button',className:'lb-x',textContent:'Clear',onclick:async()=>{try{await fetch('/discover/like/clear',{method:'POST'})}catch(e){}loadRecs(true)}}));
     recs.append(n);if(!j.items.length)return}
-  if(!j.items.length){recs.append(note(j.sources&&j.sources.length<PSRC.length?'Nothing from these sources yet. Refresh to dig for more.':'Download a few tracks and picks will appear here.'));return}
+  if(!j.items.length){if(j.sources&&j.sources.length<PSRC.length){recs.append(note('Nothing from these sources yet. Refresh to dig for more.'));return}
+    const n=note('Connect your YouTube, SoundCloud or Discogs, or download a few tracks, and picks will appear here. ');
+    n.append(el('button',{type:'button',className:'lb-x',textContent:'Connect sources',onclick:openConnect}));recs.append(n);return}
   const shown=Math.min(j.items.length,recShown);
   /* Picks as a list (same look as the library table): play | title | artist | BPM | time | why | like / not for me / download / remove */
   const body=el('tbody'),cols=[['','c-play'],['Title','c-title'],['','c-wave'],['Artist','c-artist'],['BPM','c-bpm num'],['Time','c-time num'],['Why','c-why'],['','c-acts']];
@@ -697,7 +746,7 @@ async function loadRecs(force){
     const artist=el('td',{className:'c-artist'});
     if(x.artist)artist.append(el('a',{href:'https://www.youtube.com/results?search_query='+encodeURIComponent(x.artist),target:'_blank',rel:'noopener',title:'Find more by '+x.artist,textContent:x.artist}));
     else artist.append(chan(x.channel,x.channel_url));
-    const why=disc?('Sounds '+(x.pct==null?'like':x.pct>=90?'very close to':x.pct>=75?'close to':x.pct>=60?'similar to':'loosely like')+' '+x.because+' · '+SRCN[x.src]+(x.label&&x.label!==SRCN[x.src]?', '+x.label:'')):(x.src==='rekordbox'?'From your Rekordbox: ':x.src==='similar'?'Similar to ':x.kind==='artist'||x.kind==='label'?'More from ':x.kind==='liked'?'Because you liked ':'Because you downloaded ')+x.because;
+    const why=disc?('Sounds '+(x.pct==null?'like':x.pct>=90?'very close to':x.pct>=75?'close to':x.pct>=60?'similar to':'loosely like')+' '+x.because+' · '+SRCN[x.src]+(x.label&&x.label!==SRCN[x.src]?', '+x.label:'')):(x.src==='rekordbox'?'From your Rekordbox: ':x.src==='similar'?'Similar to ':x.kind==='artist'||x.kind==='label'?'More from ':x.kind==='liked'?'Because you liked ':x.kind==='connected'?'Because you like ':'Because you downloaded ')+x.because;
     const dn=el('button',{type:'button',className:'pk-ic',title:'Not for me','aria-label':'Not for me',innerHTML:thumb(true)});
     const dl=store?el('a',{className:'go pk-dl',href:x.url,target:'_blank',rel:'noopener',textContent:'Buy',title:'Open on '+SRCN[x.src]}):el('button',{type:'button',className:'go pk-dl',textContent:'Download'});
     const own=el('button',{type:'button',className:'pk-owned',textContent:'Already owned',title:'Keep this track out of suggestions'});

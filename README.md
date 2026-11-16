@@ -5,6 +5,7 @@ DJ library organiser and music discovery app. It runs locally on your PC and ope
 - Library: one table for all your tracks, with BPM, key, energy, crates and filters
 - Crates, smart crates and a Set builder with in-browser decks
 - Picks: recommendations from your taste, with previews
+- Connect your sources: paste a public YouTube channel or playlist, SoundCloud profile or Discogs username (no login). Picks starts from the music you already like, so a new install has picks straight away
 - Import from Rekordbox (XML or the local library), and export crates as Rekordbox XML / M3U8
 - Downloads from YouTube and SoundCloud (built on yt-dlp) into your chosen library folder. Only use it on content you have the rights to.
 

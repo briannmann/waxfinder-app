@@ -26,6 +26,7 @@ import smartcrates, library_setting, taste, lastfm, profile, popularity, bpm as 
 import stylecleanup, discogs_api, energy
 import ownership
 import manualowned, saved, trackedit
+import connections
 from pickrules import excluded_pick
 from paths import posix, safe_replace, note, atomic_write
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -512,6 +513,13 @@ def like_resolver(url):
     return run
 
 
+def rebuild_recs():
+    """A source was just connected: build Picks again so its tracks start working straight away."""
+    if "youtube" not in PICK_OFF and RECS["state"] != "working":
+        RECS["state"] = "working"; threading.Thread(target=build_recs, daemon=True).start()
+connections.ON_SYNC = lambda: rebuild_recs()
+
+
 def recs_payload(build=True):
     """What /recs sends: the cached picks filtered to the allowed sources. Filtering is view-only, so YouTube picks
     come straight back when YouTube is switched on again. With YouTube off nothing here starts a YouTube rebuild."""
@@ -585,6 +593,10 @@ def build_recs():
                     for e in hist:
                         if e.get("seed_vid") and e["id"] in cur: cur[e["id"]]["seed_vid"] = e["seed_vid"]
                     save_hist(list(cur.values()))
+            # connected sources (YouTube / SoundCloud / Discogs links): what you already like starts mixes too, so a new install has picks
+            look = lambda q: ((y.extract_info("ytsearch1:" + q, download=False).get("entries") or [{}])[0] or {}).get("id")
+            for v, t, svc in connections.seeds(RECS.get("rot", 0), max(2, 6 - len(seeds)), look):
+                seeds.append((v, t, 2.5, "connected"))
             with LOCK: votes = dict(VOTES)
             ranked = sorted(votes.items(), key=lambda kv: -kv[1]["ts"])
             # likes and "Not for me" no longer pull in YouTube's radio for that song (a pop like dragged in pop radio);
@@ -605,7 +617,7 @@ def build_recs():
             seed_w = {sd: max(.25, min(1.0, (seed_pos.get(sd, 0) + 1) / (seed_neg[sd] + 1))) for sd in seed_neg}
             seeds = [(v, t, w * seed_w.get(t, 1.0), k) for v, t, w, k in seeds if t not in muted]
             have = ({vid_of(e["url"]) for e in hist} | {e.get("seed_vid") for e in hist} | {sd[0] for sd in seeds}
-                    | set(DISMISSED) | set(votes))
+                    | set(DISMISSED) | set(votes) | connections.owned_vids())
             dismissed_t = ({d["tk"] for d in DISMISSED.values()}
                            | {tkey(x["item"]["title"]) for x in votes.values() if x["v"] == -1})  # re-uploads stay gone
             score, neg, info = {}, {}, {}
@@ -669,6 +681,7 @@ def build_recs():
             rb_top = [(k, rb[k][0]) for k in list(rb)[:150] if k not in known]
             asks = [(k, nm, "artist", 2.5) for k, nm in rotate(list(known.items()), 2, 2)]
             asks += [(k, nm, "rekordbox", 2.5) for k, nm in rotate(rb_top, 0, 3)]
+            asks += [(k, nm, "connected", 2.5) for k, nm in rotate([kv for kv in connections.artists() if kv[0] not in known and kv[0] not in rb], 0, 3)]
             sim, simw = {}, {}   # Last.fm: artists like the ones you play that you don't have yet
             for k, nm in rotate([kv for kv in list(known.items()) + rb_top[:60] if len(kv[0]) >= 4], 0, 5):
                 for n, m in lastfm.similar(nm, 30):
@@ -748,9 +761,10 @@ def build_recs():
         rbl = (tst or {}).get("artists", [])[:60]; rbt = sum(w for _, w in rbl) or 1
         n_yes = sum(1 for x in sigs if x["side"] == "yes")
         sigs += [{"artists": [n], "weight": 0.5 * n_yes * w / rbt, "side": "yes"} for n, w in rbl]   # Rekordbox: a quieter yes
+        sigs += [{"artists": [n], "weight": 0.5, "side": "yes"} for _, n in connections.artists(60)]   # connected sources: a quieter yes too
         t0 = time.time()
         prof = profile.Profile(sigs)
-        explore_ids = [c for c in order if info[c]["src"] in ("artist", "rekordbox", "similar", "label")][:20]
+        explore_ids = [c for c in order if info[c]["src"] in ("artist", "rekordbox", "similar", "label", "connected")][:20]
         for c in dict.fromkeys(order[:80] + explore_ids):
             lastfm.OFFLINE = time.time() - t0 > 25          # tag lookups get 25 s; after that only what's cached counts
             adj, fit = prof.score(info[c]["title"], info[c]["channel"])
@@ -763,7 +777,7 @@ def build_recs():
         order = sorted(final, key=final.get, reverse=True)
         band = bpm_band(tst, hist)
         # --- popularity: fresh mega-hits (views piling up fast, giant channels) sink; steady classics and small labels don't ---
-        explore_top = [c for c in order if info[c]["src"] in ("artist", "rekordbox", "similar", "label")][:12]
+        explore_top = [c for c in order if info[c]["src"] in ("artist", "rekordbox", "similar", "label", "connected")][:12]
         need = [] if yt_cool() else [c for c in dict.fromkeys(order[:40] + explore_top) if c not in META or META[c].get("lite") or (band and c not in BPMS)][:16]
         if need:   # at most 16 new YouTube lookups per refresh, two at a time: stay well clear of rate limits
             pool = ThreadPoolExecutor(2); futs = {pool.submit(meta_and_bpm, c, bool(band)): c for c in need}
@@ -780,7 +794,7 @@ def build_recs():
                 b = BPMS.get(c)
                 if b: info[c]["bpm"] = b; final[c] -= min(2.5, tempo.near(b, *band) / 5)
             order = sorted(final, key=final.get, reverse=True)
-        explore = [c for c in order if info[c]["src"] in ("artist", "rekordbox", "similar", "label") and final[c] > 0
+        explore = [c for c in order if info[c]["src"] in ("artist", "rekordbox", "similar", "label", "connected") and final[c] > 0
                    and (info[c].get("fit") is None or info[c]["fit"] >= -0.15)]
         items = [info[c] for c in pick_diverse(order, info, out=pick_diverse(explore, info, n=6, per_seed=2))]   # up to 6 discovery slots
         try: MIX_FILE.write_text(json.dumps({k: list(v) for k, v in MIXES.items() if time.time() - v[0] < 86400}))
@@ -1062,6 +1076,7 @@ class H(BaseHTTPRequestHandler):
             finally: up.close()
             return
         if path == "/recs": return self.send(200, json.dumps(recs_payload()))
+        if path == "/connections": return self.send(200, json.dumps(connections.status()))
         if path == "/saved":   # saved Picks; once downloaded or marked owned they drop off on their own
             try:
                 owned = owned_library()
@@ -1535,6 +1550,12 @@ class H(BaseHTTPRequestHandler):
             if RECS["state"] != "working":
                 RECS["state"] = "working"; threading.Thread(target=build_recs, daemon=True).start()
             return self.send(200, json.dumps(RECS))
+        if self.path in ("/connections/connect", "/connections/remove"):
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or "{}")
+            try:
+                if self.path.endswith("connect"): return self.send(200, json.dumps(connections.connect(body.get("service"), body.get("link"))))
+                return self.send(200, json.dumps(connections.remove(body.get("service"))))
+            except ValueError as ex: return self.send(400, json.dumps({"error": str(ex)}))
         if self.path == "/recs/sources":
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or "{}")
             off = body.get("off")
