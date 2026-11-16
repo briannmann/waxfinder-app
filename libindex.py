@@ -242,7 +242,9 @@ def record(kind, **extra):
 def is_mount(p):
     """A mounted drive. On Windows /Volumes/MUSIC is a junction to the stick's drive (start.ps1 makes it); ismount() says no to junctions."""
     p = Path(p)
-    if os.path.ismount(p): return True
+    try:
+        if os.path.ismount(p): return True
+    except OSError: return False   # Windows: a junction to an unplugged stick raises instead of saying no
     if sys.platform != "win32" or not p.is_junction(): return False
     r = os.path.realpath(p)
     return os.path.ismount(r) and os.path.isdir(r)   # ismount() is True for any drive root, even an unplugged one
