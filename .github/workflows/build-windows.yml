@@ -47,8 +47,8 @@ jobs:
           $log = Join-Path $env:LOCALAPPDATA "Programs\Waxfinder\server.log"
           if (Test-Path $log) { Write-Host "---- server.log ----"; Get-Content $log -Tail 60 }
           if (-not $ok) { throw "Waxfinder did not answer on :8765 within 90 s" }
-          $home = Invoke-WebRequest http://127.0.0.1:8765/ -UseBasicParsing
-          if ($home.StatusCode -ne 200) { throw "home page failed" }
+          $page = Invoke-WebRequest http://127.0.0.1:8765/ -UseBasicParsing
+          if ($page.StatusCode -ne 200) { throw "home page failed" }
           Write-Host "Smoke test passed"
       - uses: actions/upload-artifact@v4
         with: { name: Waxfinder-Setup, path: out/Waxfinder-Setup.exe }
