@@ -1565,17 +1565,23 @@ if __name__ == "__main__":
     print("http://127.0.0.1:8765")
     if FROZEN:
         import socket, webbrowser
+        def _app_window():
+            """The installed build shows Waxfinder in its own window (Edge WebView2, part of Windows 11), not a browser tab.
+            Returns False if the window can't be made, so the caller falls back to the browser."""
+            try:
+                import webview
+                webview.settings["ALLOW_DOWNLOADS"] = True   # crate exports (XML / M3U8) save like in a browser
+                webview.create_window("Waxfinder", "http://127.0.0.1:8765", width=1440, height=900, min_size=(960, 600))
+                store = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Waxfinder" / "webview"
+                webview.start(private_mode=False, storage_path=str(store))   # keep the page's saved settings between runs
+                return True
+            except Exception as ex:
+                import paths; paths.note("app window", ex); return False
         with socket.socket() as _s:
             _s.settimeout(1)
             if _s.connect_ex(("127.0.0.1", 8765)) == 0:   # already running: just open it again
-                webbrowser.open("http://127.0.0.1:8765"); sys.exit(0)
-        def _open_when_up():
-            for _ in range(240):
-                try:
-                    urllib.request.urlopen("http://127.0.0.1:8765/discover/status", timeout=2).read(); break
-                except Exception: time.sleep(.5)
-            webbrowser.open("http://127.0.0.1:8765")
-        threading.Thread(target=_open_when_up, daemon=True).start()
+                if not _app_window(): webbrowser.open("http://127.0.0.1:8765")
+                sys.exit(0)
     # Run before any background writers. Only inferred genre fields are removed;
     # exact backups retain the original data, vectors and voting history.
     GENRE_CLEANUP = {
@@ -1600,4 +1606,10 @@ if __name__ == "__main__":
     discover.OWNED_LOADER = owned_library
     if time.time() - discover.DB.get("ts", 0) > 6 * 3600: discover_bg(load_hist())
     ThreadingHTTPServer.request_queue_size = 128   # default backlog is 5: a burst of page requests got connections refused ("Failed to fetch")
-    ThreadingHTTPServer(("127.0.0.1" if FROZEN else "0.0.0.0", 8765), H).serve_forever()   # installed build: this PC only (no firewall prompt)
+    SERVER = ThreadingHTTPServer(("127.0.0.1" if FROZEN else "0.0.0.0", 8765), H)   # installed build: this PC only (no firewall prompt)
+    if FROZEN:
+        threading.Thread(target=SERVER.serve_forever, daemon=True).start()
+        if _app_window(): os._exit(0)   # window closed: quit (the background scans are daemon threads)
+        webbrowser.open("http://127.0.0.1:8765")   # no window possible: the old way, browser tab
+        threading.Event().wait()                   # the server thread above keeps serving
+    SERVER.serve_forever()

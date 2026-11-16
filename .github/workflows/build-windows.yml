@@ -16,7 +16,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install numpy yt-dlp imageio-ffmpeg mutagen certifi pyinstaller pillow
+          pip install numpy yt-dlp imageio-ffmpeg mutagen certifi pyinstaller pillow pywebview
           pip install pyrekordbox || echo "pyrekordbox not installed (optional)"
       - name: Build app folder
         run: pyinstaller waxfinder.spec --noconfirm
